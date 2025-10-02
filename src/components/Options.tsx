@@ -2,21 +2,11 @@ import React, { useState } from 'react';
 import { TrendingUp, TrendingDown, Clock, DollarSign, BarChart3 } from 'lucide-react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 
-const Options: React.FC = () => {
-  const [selectedVault, setSelectedVault] = useState('crypto.eth');
-  const [optionType, setOptionType] = useState('CALL');
-  const [strikePrice, setStrikePrice] = useState('15000');
-  const [expiry, setExpiry] = useState('30');
-  const [quantity, setQuantity] = useState('1');
-  const [mintingOption, setMintingOption] = useState(false);
+interface OptionsProps {
+  initialSelectedVault?: string;
+}
 
-  const vaults = [
-    { name: 'crypto.eth', value: 42500 },
-    { name: 'defi.com', value: 35200 },
-    { name: 'web3.io', value: 28900 },
-    { name: 'nft.org', value: 18830 },
-  ];
-
+const Options: React.FC<OptionsProps> = ({ initialSelectedVault }) => {
   const activeOptions = [
     {
       id: 'OPT-0001',
@@ -50,6 +40,29 @@ const Options: React.FC = () => {
     },
   ];
 
+  const [selectedVault, setSelectedVault] = useState(initialSelectedVault ?? 'crypto.eth');
+  const [optionType, setOptionType] = useState('CALL');
+  const [strikePrice, setStrikePrice] = useState('15000');
+  const [expiry, setExpiry] = useState('30');
+  const [quantity, setQuantity] = useState('1');
+  const [mintingOption, setMintingOption] = useState(false);
+  const [exercisingOption, setExercisingOption] = useState<string | null>(null);
+  const [closingOption, setClosingOption] = useState<string | null>(null);
+  const [showDetails, setShowDetails] = useState<string | null>(null);
+  const [activeOptionsState, setActiveOptionsState] = useState(activeOptions);
+
+  const vaults = [
+    { name: 'crypto.eth', value: 42500 },
+    { name: 'defi.com', value: 35200 },
+    { name: 'web3.io', value: 28900 },
+    { name: 'nft.org', value: 18830 },
+  ];
+
+  // Update selected vault if prop changes
+  React.useEffect(() => {
+    if (initialSelectedVault) setSelectedVault(initialSelectedVault);
+  }, [initialSelectedVault]);
+
   const selectedVaultData = vaults.find(v => v.name === selectedVault);
   const premiumCost = parseInt(strikePrice) * 0.05;
   const breakeven = parseInt(strikePrice) + premiumCost;
@@ -80,7 +93,31 @@ const Options: React.FC = () => {
     // Simulate transaction
     await new Promise(resolve => setTimeout(resolve, 3000));
     setMintingOption(false);
-    alert(`${optionType} option minted successfully for ${selectedVault}!`);
+  };
+
+  const handleExerciseOption = async (optionId: string) => {
+    setExercisingOption(optionId);
+    // Simulate transaction
+    await new Promise(resolve => setTimeout(resolve, 2000));
+    setExercisingOption(null);
+    // Remove from active options
+    setActiveOptionsState(prev => prev.filter(opt => opt.id !== optionId));
+  };
+
+  const handleCloseOption = async (optionId: string) => {
+    setClosingOption(optionId);
+    // Simulate transaction
+    await new Promise(resolve => setTimeout(resolve, 2000));
+    setClosingOption(null);
+    // Remove from active options
+    setActiveOptionsState(prev => prev.filter(opt => opt.id !== optionId));
+  };
+
+  const handleShowDetails = (optionId: string) => {
+    const option = activeOptionsState.find(opt => opt.id === optionId);
+    if (option) {
+      setShowDetails(showDetails === optionId ? null : optionId);
+    }
   };
 
   const CustomTooltip = ({ active, payload, label }: any) => {
@@ -110,7 +147,7 @@ const Options: React.FC = () => {
     <div className="space-y-8">
       {/* Header */}
       <div>
-        <h1 className="text-4xl font-orbitron font-bold text-white">⚡ Options Panel</h1>
+        <h1 className="text-4xl font-space-mono font-bold text-white tracking-widest">OPTIONS PANEL</h1>
         <p className="text-gray-400 font-jetbrains mt-1">Mint and manage synthetic options on your domain vaults</p>
       </div>
 
@@ -118,11 +155,11 @@ const Options: React.FC = () => {
         {/* Option Creation Form */}
         <div className="lg:col-span-2">
           <div className="bg-gray-900 rounded-lg border border-gray-700 p-6">
-            <h2 className="text-xl font-orbitron font-bold text-white mb-6">🎯 Mint New Option</h2>
+            <h2 className="text-xl font-space-mono font-bold text-white mb-6 tracking-wide">MINT NEW OPTION</h2>
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
               <div>
-                <label className="block text-sm font-jetbrains text-gray-400 mb-2">🌐 Select Vault/Domain</label>
+                <label className="block text-sm font-jetbrains text-gray-400 mb-2">Select Vault/Domain</label>
                 <select
                   value={selectedVault}
                   onChange={(e) => setSelectedVault(e.target.value)}
@@ -137,7 +174,7 @@ const Options: React.FC = () => {
               </div>
               
               <div>
-                <label className="block text-sm font-jetbrains text-gray-400 mb-2">📊 Option Type</label>
+                <label className="block text-sm font-jetbrains text-gray-400 mb-2">Option Type</label>
                 <select
                   value={optionType}
                   onChange={(e) => setOptionType(e.target.value)}
@@ -151,7 +188,7 @@ const Options: React.FC = () => {
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
               <div>
-                <label className="block text-sm font-jetbrains text-gray-400 mb-2">💰 Strike Price</label>
+                <label className="block text-sm font-jetbrains text-gray-400 mb-2">Strike Price</label>
                 <input
                   type="number"
                   value={strikePrice}
@@ -161,7 +198,7 @@ const Options: React.FC = () => {
               </div>
               
               <div>
-                <label className="block text-sm font-jetbrains text-gray-400 mb-2">⏰ Expiry</label>
+                <label className="block text-sm font-jetbrains text-gray-400 mb-2">Expiry</label>
                 <select
                   value={expiry}
                   onChange={(e) => setExpiry(e.target.value)}
@@ -176,7 +213,7 @@ const Options: React.FC = () => {
               </div>
               
               <div>
-                <label className="block text-sm font-jetbrains text-gray-400 mb-2">🔢 Quantity</label>
+                <label className="block text-sm font-jetbrains text-gray-400 mb-2">Quantity</label>
                 <input
                   type="number"
                   value={quantity}
@@ -189,7 +226,7 @@ const Options: React.FC = () => {
 
             {/* Payoff Chart Placeholder */}
             <div className="mb-8">
-              <h3 className="text-lg font-orbitron font-bold text-white mb-4 text-center">📈 Profit & Loss Chart</h3>
+              <h3 className="text-lg font-space-mono font-bold text-white mb-4 text-center tracking-wide">PROFIT & LOSS CHART</h3>
               <div className="bg-gray-800 rounded-lg p-4 border border-gray-600">
                 <ResponsiveContainer width="100%" height={250}>
                   <LineChart data={generatePLData()}>
@@ -224,20 +261,20 @@ const Options: React.FC = () => {
             {/* Option Metrics */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
               <div className="text-center">
-                <div className="text-sm font-jetbrains uppercase tracking-wider text-gray-400 mb-1">💸 Premium Cost</div>
-                <div className="text-lg font-orbitron font-bold text-white">{formatCurrency(premiumCost)}</div>
+                <div className="text-sm font-jetbrains uppercase tracking-wider text-gray-400 mb-1">Premium Cost</div>
+                <div className="text-lg font-space-mono font-bold text-white">{formatCurrency(premiumCost)}</div>
               </div>
               <div className="text-center">
-                <div className="text-sm font-jetbrains uppercase tracking-wider text-gray-400 mb-1">🚀 Max Profit</div>
-                <div className="text-lg font-orbitron font-bold text-neon-green">Unlimited</div>
+                <div className="text-sm font-jetbrains uppercase tracking-wider text-gray-400 mb-1">Max Profit</div>
+                <div className="text-lg font-space-mono font-bold text-neon-green">Unlimited</div>
               </div>
               <div className="text-center">
-                <div className="text-sm font-jetbrains uppercase tracking-wider text-gray-400 mb-1">⚠️ Max Loss</div>
-                <div className="text-lg font-orbitron font-bold text-red-400">{formatCurrency(premiumCost)}</div>
+                <div className="text-sm font-jetbrains uppercase tracking-wider text-gray-400 mb-1">Max Loss</div>
+                <div className="text-lg font-space-mono font-bold text-red-400">{formatCurrency(premiumCost)}</div>
               </div>
               <div className="text-center">
-                <div className="text-sm font-jetbrains uppercase tracking-wider text-gray-400 mb-1">⚖️ Breakeven</div>
-                <div className="text-lg font-orbitron font-bold text-white">{formatCurrency(breakeven)}</div>
+                <div className="text-sm font-jetbrains uppercase tracking-wider text-gray-400 mb-1">Breakeven</div>
+                <div className="text-lg font-space-mono font-bold text-white">{formatCurrency(breakeven)}</div>
               </div>
             </div>
 
@@ -257,17 +294,17 @@ const Options: React.FC = () => {
         {/* Active Options */}
         <div>
           <div className="bg-gray-900 rounded-lg border border-gray-700 p-6">
-            <h2 className="text-xl font-orbitron font-bold text-white mb-6">🎯 Active Options</h2>
+            <h2 className="text-xl font-space-mono font-bold text-white mb-6 tracking-wide">ACTIVE OPTIONS</h2>
             
             <div className="space-y-4">
-              {activeOptions.map((option) => (
+              {activeOptionsState.map((option) => (
                 <div
                   key={option.id}
                   className="bg-gray-800 rounded-lg border border-gray-600 p-4 hover:border-neon-green transition-colors"
                 >
                   <div className="flex items-center justify-between mb-3">
                     <div>
-                      <div className="text-sm font-orbitron font-bold text-white">🌐 {option.domain}</div>
+                      <div className="text-sm font-space-mono font-bold text-white">{option.domain}</div>
                       <div className="text-xs text-gray-400 font-jetbrains">ID: {option.id}</div>
                     </div>
                     <div className="flex items-center space-x-2">
@@ -283,32 +320,85 @@ const Options: React.FC = () => {
                   
                   <div className="grid grid-cols-3 gap-2 text-xs mb-3">
                     <div>
-                      <div className="text-gray-400">💰 Strike</div>
-                      <div className="text-white font-jetbrains">{formatCurrency(option.strike)}</div>
+                      <div className="text-gray-400">Strike</div>
+                      <div className="text-white font-space-mono">{formatCurrency(option.strike)}</div>
                     </div>
                     <div>
-                      <div className="text-gray-400">⏰ Expiry</div>
-                      <div className="text-white font-jetbrains">{option.expiry}</div>
+                      <div className="text-gray-400">Expiry</div>
+                      <div className="text-white font-space-mono">{option.expiry}</div>
                     </div>
                     <div>
-                      <div className="text-gray-400">📊 P&L</div>
-                      <div className={`font-jetbrains font-bold ${option.pnl >= 0 ? 'text-neon-green' : 'text-red-400'}`}>
+                      <div className="text-gray-400">P&L</div>
+                      <div className={`font-space-mono font-bold ${option.pnl >= 0 ? 'text-neon-green' : 'text-red-400'}`}>
                         {option.pnl >= 0 ? '+' : ''}{formatCurrency(option.pnl)}
                       </div>
                     </div>
                   </div>
                   
                   <div className="flex space-x-2">
-                    <button className="flex-1 px-3 py-1.5 bg-green-600 text-white rounded text-xs font-jetbrains hover:bg-green-700 transition-colors font-bold">
-                      Exercise
+                    <button 
+                      onClick={() => handleExerciseOption(option.id)}
+                      disabled={exercisingOption === option.id || option.status !== 'ITM'}
+                      className="flex-1 px-3 py-1.5 bg-green-600 text-white rounded text-xs font-jetbrains hover:bg-green-700 transition-colors font-bold disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      {exercisingOption === option.id ? 'Exercising...' : 'Exercise'}
                     </button>
-                    <button className="flex-1 px-3 py-1.5 bg-gray-600 text-white rounded text-xs font-jetbrains hover:bg-gray-700 transition-colors font-bold">
+                    <button 
+                      onClick={() => handleShowDetails(option.id)}
+                      className="flex-1 px-3 py-1.5 bg-gray-600 text-white rounded text-xs font-jetbrains hover:bg-gray-700 transition-colors font-bold"
+                    >
                       Details
                     </button>
-                    <button className="flex-1 px-3 py-1.5 bg-red-600 text-white rounded text-xs font-jetbrains hover:bg-red-700 transition-colors font-bold">
-                      Close
+                    <button 
+                      onClick={() => handleCloseOption(option.id)}
+                      disabled={closingOption === option.id}
+                      className="flex-1 px-3 py-1.5 bg-red-600 text-white rounded text-xs font-jetbrains hover:bg-red-700 transition-colors font-bold disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      {closingOption === option.id ? 'Closing...' : 'Close'}
                     </button>
                   </div>
+
+                  {/* Option Details */}
+                  {showDetails === option.id && (
+                    <div className="mt-4 p-4 bg-gray-700 rounded-lg border border-gray-600">
+                      <div className="space-y-2 text-xs">
+                        <div className="flex justify-between">
+                          <span className="text-gray-400">Option ID:</span>
+                          <span className="text-white font-mono">{option.id}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-gray-400">Domain:</span>
+                          <span className="text-white font-mono">{option.domain}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-gray-400">Type:</span>
+                          <span className="text-white font-mono">{option.type}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-gray-400">Strike Price:</span>
+                          <span className="text-white font-mono">{formatCurrency(option.strike)}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-gray-400">Quantity:</span>
+                          <span className="text-white font-mono">{option.quantity}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-gray-400">Expiry:</span>
+                          <span className="text-white font-mono">{option.expiry}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-gray-400">Current P&L:</span>
+                          <span className={`font-mono ${option.pnl >= 0 ? 'text-neon-green' : 'text-red-400'}`}>
+                            {option.pnl >= 0 ? '+' : ''}{formatCurrency(option.pnl)}
+                          </span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-gray-400">Status:</span>
+                          <span className="text-white font-mono">{option.status}</span>
+                        </div>
+                      </div>
+                    </div>
+                  )}
                 </div>
               ))}
             </div>

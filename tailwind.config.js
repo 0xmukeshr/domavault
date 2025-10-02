@@ -6,6 +6,8 @@ export default {
       fontFamily: {
         'jetbrains': ['JetBrains Mono', 'monospace'],
         'orbitron': ['Orbitron', 'sans-serif'],
+        'space-mono': ['Space Mono', 'monospace'],
+        'michroma': ['Michroma', 'sans-serif'],
       },
       colors: {
         'neon-green': '#00ff41',

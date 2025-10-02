@@ -166,15 +166,15 @@ const Analytics: React.FC = () => {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-display font-bold text-white">AI Analytics</h1>
-          <p className="text-gray-400 font-body mt-1">Comprehensive domain analytics and forecasting</p>
+          <h1 className="text-4xl font-space-mono font-bold text-white tracking-widest">AI ANALYTICS</h1>
+          <p className="text-gray-400 font-jetbrains mt-1">Comprehensive domain analytics and forecasting</p>
         </div>
         <div className="flex items-center space-x-4">
-          <label className="text-sm font-mono text-gray-400">Analyze Domain:</label>
+          <label className="text-sm font-jetbrains text-gray-400">Analyze Domain:</label>
           <select
             value={selectedDomain}
             onChange={(e) => setSelectedDomain(e.target.value)}
-            className="px-4 py-2 bg-gray-800 border border-gray-600 rounded-lg text-white font-body focus:border-neon-green focus:outline-none"
+            className="px-4 py-2 bg-gray-800 border border-gray-600 rounded-lg text-white font-jetbrains focus:border-neon-green focus:outline-none"
           >
             {domains.map((domain) => (
               <option key={domain.name} value={domain.name}>
@@ -189,32 +189,32 @@ const Analytics: React.FC = () => {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <div className="bg-gradient-to-b from-gray-900 to-gray-800 border border-gray-700 rounded-lg p-6 text-center hover:border-neon-purple transition-all duration-300">
           <Brain className="text-neon-purple mx-auto mb-3" size={32} />
-          <div className="text-xs font-mono uppercase tracking-wider text-gray-400 mb-2">AI Rarity Score</div>
-          <div className={`text-3xl font-display font-bold ${getScoreColor(selectedDomainData?.score || 0)}`}>
+          <div className="text-xs font-jetbrains uppercase tracking-wider text-gray-400 mb-2">AI Rarity Score</div>
+          <div className={`text-3xl font-space-mono font-bold ${getScoreColor(selectedDomainData?.score || 0)}`}>
             {selectedDomainData?.score}/100
           </div>
         </div>
 
         <div className="bg-gradient-to-b from-gray-900 to-gray-800 border border-gray-700 rounded-lg p-6 text-center hover:border-neon-blue transition-all duration-300">
           <Target className="text-neon-blue mx-auto mb-3" size={32} />
-          <div className="text-xs font-mono uppercase tracking-wider text-gray-400 mb-2">Vault Value</div>
-          <div className="text-2xl font-display font-bold text-white">
+          <div className="text-xs font-jetbrains uppercase tracking-wider text-gray-400 mb-2">Vault Value</div>
+          <div className="text-2xl font-space-mono font-bold text-white">
             {formatCurrency(selectedDomainData?.value || 0)}
           </div>
         </div>
 
         <div className="bg-gradient-to-b from-gray-900 to-gray-800 border border-gray-700 rounded-lg p-6 text-center hover:border-neon-green transition-all duration-300">
           <TrendingUp className="text-neon-green mx-auto mb-3" size={32} />
-          <div className="text-xs font-mono uppercase tracking-wider text-gray-400 mb-2">Predicted Yield</div>
-          <div className="text-2xl font-display font-bold text-neon-green">
+          <div className="text-xs font-jetbrains uppercase tracking-wider text-gray-400 mb-2">Predicted Yield</div>
+          <div className="text-2xl font-space-mono font-bold text-neon-green">
             {selectedDomainData?.yield.toFixed(2)}%
           </div>
         </div>
 
         <div className="bg-gradient-to-b from-gray-900 to-gray-800 border border-gray-700 rounded-lg p-6 text-center hover:border-yellow-400 transition-all duration-300">
           <Star className="text-yellow-400 mx-auto mb-3" size={32} />
-          <div className="text-xs font-mono uppercase tracking-wider text-gray-400 mb-2">Market Rank</div>
-          <div className="text-2xl font-display font-bold text-white">
+          <div className="text-xs font-jetbrains uppercase tracking-wider text-gray-400 mb-2">Market Rank</div>
+          <div className="text-2xl font-space-mono font-bold text-white">
             #{selectedDomainData?.rank}
           </div>
         </div>
@@ -224,7 +224,7 @@ const Analytics: React.FC = () => {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         {/* Domain Traits Analysis */}
         <div className="bg-gradient-to-b from-gray-900 to-gray-800 border border-gray-700 rounded-lg p-6">
-          <h3 className="text-xl font-display font-bold text-white mb-6 text-center">Domain Traits Analysis</h3>
+          <h3 className="text-xl font-space-mono font-bold text-white mb-6 text-center tracking-wide">Domain Traits Analysis</h3>
           <ResponsiveContainer width="100%" height={300}>
             <RadarChart data={radarData}>
               <PolarGrid stroke="#333" />
@@ -251,7 +251,7 @@ const Analytics: React.FC = () => {
 
         {/* Price Trend Prediction */}
         <div className="bg-gradient-to-b from-gray-900 to-gray-800 border border-gray-700 rounded-lg p-6">
-          <h3 className="text-xl font-display font-bold text-white mb-6 text-center">Price Trend Prediction</h3>
+          <h3 className="text-xl font-space-mono font-bold text-white mb-6 text-center tracking-wide">Price Trend Prediction</h3>
           <ResponsiveContainer width="100%" height={300}>
             <LineChart data={priceData}>
               <CartesianGrid strokeDasharray="3 3" stroke="#333" />
@@ -282,11 +282,11 @@ const Analytics: React.FC = () => {
           </ResponsiveContainer>
           <div className="bg-gray-800 rounded-lg p-4 mt-4">
             <div className="text-center">
-              <div className="text-sm text-gray-400 mb-2 font-mono">30-Day Forecast:</div>
-              <div className="text-2xl font-display font-bold text-neon-green mb-1">
+              <div className="text-sm text-gray-400 mb-2 font-jetbrains">30-Day Forecast:</div>
+              <div className="text-2xl font-space-mono font-bold text-neon-green mb-1">
                 {formatCurrency((selectedDomainData?.value || 0) * 1.15)}
               </div>
-              <div className="text-sm text-neon-green font-body">Expected: +15% growth</div>
+              <div className="text-sm text-neon-green font-jetbrains">Expected: +15% growth</div>
             </div>
           </div>
         </div>
@@ -294,7 +294,7 @@ const Analytics: React.FC = () => {
 
       {/* Top Opportunities */}
       <div>
-        <h2 className="text-2xl font-display font-bold text-white mb-6">Top Opportunities</h2>
+        <h2 className="text-2xl font-space-mono font-bold text-white mb-6 tracking-wide">Top Opportunities</h2>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {opportunities.map((opportunity, index) => (
             <div
@@ -302,38 +302,38 @@ const Analytics: React.FC = () => {
               className="bg-gradient-to-b from-gray-900 to-gray-800 border border-gray-700 rounded-lg p-6 transition-all duration-200 hover:border-neon-green hover:transform hover:-translate-y-1 hover:shadow-lg hover:shadow-neon-green/20"
             >
               <div className="text-center mb-4">
-                <div className="text-lg font-display font-bold text-white mb-2">
+                <div className="text-lg font-space-mono font-bold text-white mb-2">
                   {opportunity.domain}
                 </div>
-                <div className={`text-2xl font-display font-bold ${getScoreColor(opportunity.score)} mb-1`}>
+                <div className={`text-2xl font-space-mono font-bold ${getScoreColor(opportunity.score)} mb-1`}>
                   AI Score: {opportunity.score}
                 </div>
               </div>
 
               <div className="space-y-3 mb-6">
                 <div className="flex justify-between">
-                  <span className="text-gray-400 font-mono text-sm">ROI:</span>
-                  <span className="text-neon-green font-body font-bold">{opportunity.roi}%</span>
+                  <span className="text-gray-400 font-jetbrains text-sm">ROI:</span>
+                  <span className="text-neon-green font-space-mono font-bold">{opportunity.roi}%</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-gray-400 font-mono text-sm">Trend:</span>
-                  <span className={`font-body font-bold ${getTrendColor(opportunity.trend)}`}>
+                  <span className="text-gray-400 font-jetbrains text-sm">Trend:</span>
+                  <span className={`font-jetbrains font-bold ${getTrendColor(opportunity.trend)}`}>
                     {opportunity.trend}
                   </span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-gray-400 font-mono text-sm">Risk:</span>
-                  <span className={`font-body font-bold ${getRiskColor(opportunity.risk)}`}>
+                  <span className="text-gray-400 font-jetbrains text-sm">Risk:</span>
+                  <span className={`font-jetbrains font-bold ${getRiskColor(opportunity.risk)}`}>
                     {opportunity.risk}
                   </span>
                 </div>
               </div>
 
-              <div className="text-xs text-gray-400 font-body mb-4">
+              <div className="text-xs text-gray-400 font-jetbrains mb-4">
                 {opportunity.description}
               </div>
 
-              <button className="w-full px-4 py-2 bg-gradient-to-r from-neon-green to-neon-blue text-black font-body font-medium transition-all duration-200 hover:scale-[1.02] hover:shadow-lg hover:shadow-neon-green/30 rounded-lg">
+              <button className="w-full px-4 py-2 bg-gradient-to-r from-neon-green to-neon-blue text-black font-jetbrains font-medium transition-all duration-200 hover:scale-[1.02] hover:shadow-lg hover:shadow-neon-green/30 rounded-lg">
                 Stake
               </button>
             </div>

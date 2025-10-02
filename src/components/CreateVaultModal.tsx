@@ -37,7 +37,7 @@ const CreateVaultModal: React.FC<CreateVaultModalProps> = ({ onClose }) => {
       case 1:
         return (
           <div>
-            <h3 className="text-xl font-orbitron font-bold text-white mb-6">Select Your Domain NFT</h3>
+            <h3 className="text-xl font-space-mono font-bold text-white mb-6">Select Your Domain NFT</h3>
             <div className="grid grid-cols-3 gap-4">
               {nfts.map((nft) => (
                 <div
@@ -49,7 +49,7 @@ const CreateVaultModal: React.FC<CreateVaultModalProps> = ({ onClose }) => {
                       : 'border-gray-600 bg-gray-800 hover:border-gray-500'
                   }`}
                 >
-                  <div className="text-lg font-orbitron font-bold text-white mb-2">{nft.name}</div>
+                  <div className="text-lg font-space-mono font-bold text-white mb-2">{nft.name}</div>
                   <div className="text-sm text-gray-400 space-y-1">
                     <div>TLD: {nft.tld}</div>
                     <div>Length: {nft.length}</div>
@@ -68,12 +68,12 @@ const CreateVaultModal: React.FC<CreateVaultModalProps> = ({ onClose }) => {
       case 2:
         return (
           <div>
-            <h3 className="text-xl font-orbitron font-bold text-white mb-6">AI Insights for {selectedNFT}</h3>
+            <h3 className="text-xl font-space-mono font-bold text-white mb-6">AI Insights for {selectedNFT}</h3>
             <div className="grid grid-cols-2 gap-6">
               <div className="bg-gradient-to-b from-gray-800 to-gray-900 rounded-lg p-6">
-                <h4 className="text-lg font-orbitron font-bold text-white mb-4">AI Rarity Score</h4>
+                <h4 className="text-lg font-space-mono font-bold text-white mb-4">AI Rarity Score</h4>
                 <div className="text-center mb-6">
-                  <div className={`text-4xl font-orbitron font-bold ${
+                  <div className={`text-4xl font-space-mono font-bold ${
                     selectedNFTData && selectedNFTData.score >= 90 ? 'text-green-400' : 
                     selectedNFTData && selectedNFTData.score >= 70 ? 'text-yellow-400' : 'text-red-400'
                   }`}>
@@ -97,9 +97,9 @@ const CreateVaultModal: React.FC<CreateVaultModalProps> = ({ onClose }) => {
               </div>
 
               <div className="bg-gradient-to-b from-gray-800 to-gray-900 rounded-lg p-6">
-                <h4 className="text-lg font-orbitron font-bold text-white mb-4">Predicted Annual Yield</h4>
+                <h4 className="text-lg font-space-mono font-bold text-white mb-4">Predicted Annual Yield</h4>
                 <div className="text-center mb-6">
-                  <div className="text-4xl font-orbitron font-bold text-green-400">
+                  <div className="text-4xl font-space-mono font-bold text-green-400">
                     {predictedYield.toFixed(2)}%
                   </div>
                 </div>
@@ -125,7 +125,7 @@ const CreateVaultModal: React.FC<CreateVaultModalProps> = ({ onClose }) => {
       case 3:
         return (
           <div>
-            <h3 className="text-xl font-orbitron font-bold text-white mb-6">Enter Staking Amount</h3>
+            <h3 className="text-xl font-space-mono font-bold text-white mb-6">Enter Staking Amount</h3>
             <div className="mb-8">
               <label className="block text-sm font-jetbrains text-gray-400 mb-2">Amount to Stake (USD):</label>
               <input
@@ -140,20 +140,20 @@ const CreateVaultModal: React.FC<CreateVaultModalProps> = ({ onClose }) => {
               <div className="grid grid-cols-3 gap-6">
                 <div className="text-center">
                   <div className="text-sm font-jetbrains uppercase tracking-wider text-gray-400 mb-2">Annual Yield</div>
-                  <div className="text-2xl font-orbitron font-bold text-white">
+                  <div className="text-2xl font-space-mono font-bold text-white">
                     ${(parseFloat(stakeAmount) * (predictedYield / 100)).toFixed(0)}
                   </div>
                   <div className="text-sm text-gray-400">({predictedYield.toFixed(2)}% APY)</div>
                 </div>
                 <div className="text-center">
                   <div className="text-sm font-jetbrains uppercase tracking-wider text-gray-400 mb-2">Monthly Yield</div>
-                  <div className="text-2xl font-orbitron font-bold text-white">
+                  <div className="text-2xl font-space-mono font-bold text-white">
                     ${monthlyYield.toFixed(0)}
                   </div>
                 </div>
                 <div className="text-center">
                   <div className="text-sm font-jetbrains uppercase tracking-wider text-gray-400 mb-2">Borrowing Limit</div>
-                  <div className="text-2xl font-orbitron font-bold text-white">
+                  <div className="text-2xl font-space-mono font-bold text-white">
                     ${borrowingLimit.toFixed(0)}
                   </div>
                   <div className="text-sm text-gray-400">({ltvRatio}% LTV)</div>
@@ -184,7 +184,7 @@ const CreateVaultModal: React.FC<CreateVaultModalProps> = ({ onClose }) => {
                 <span className="text-sm font-jetbrains text-white w-12">{ltvRatio}%</span>
               </div>
               <div className="text-sm text-gray-400">
-                Adjusted Borrowing Limit: ${borrowingLimit.toFixed(0)}
+                <span className="font-jetbrains">Adjusted Borrowing Limit: </span><span className="font-space-mono">${borrowingLimit.toFixed(0)}</span>
               </div>
             </div>
           </div>
@@ -193,39 +193,39 @@ const CreateVaultModal: React.FC<CreateVaultModalProps> = ({ onClose }) => {
       case 4:
         return (
           <div>
-            <h3 className="text-xl font-orbitron font-bold text-white mb-6">Confirm Vault Creation</h3>
+            <h3 className="text-xl font-space-mono font-bold text-white mb-6">Confirm Vault Creation</h3>
             <div className="grid grid-cols-2 gap-8">
               <div>
-                <h4 className="text-lg font-orbitron font-bold text-white mb-4">Vault Details</h4>
+                <h4 className="text-lg font-space-mono font-bold text-white mb-4">Vault Details</h4>
                 <div className="space-y-3 text-sm">
                   <div className="flex justify-between">
                     <span className="text-gray-400">Domain:</span>
-                    <span className="text-white font-jetbrains">{selectedNFT}</span>
+                    <span className="text-white font-space-mono">{selectedNFT}</span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-gray-400">Staking Amount:</span>
-                    <span className="text-white font-jetbrains">${parseFloat(stakeAmount).toLocaleString()}</span>
+                    <span className="text-white font-space-mono">${parseFloat(stakeAmount).toLocaleString()}</span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-gray-400">AI Rarity Score:</span>
-                    <span className="text-white font-jetbrains">{selectedNFTData?.score}/100</span>
+                    <span className="text-white font-space-mono">{selectedNFTData?.score}/100</span>
                   </div>
                 </div>
               </div>
               <div>
-                <h4 className="text-lg font-orbitron font-bold text-white mb-4">Expected Returns</h4>
+                <h4 className="text-lg font-space-mono font-bold text-white mb-4">Expected Returns</h4>
                 <div className="space-y-3 text-sm">
                   <div className="flex justify-between">
                     <span className="text-gray-400">Predicted Yield:</span>
-                    <span className="text-green-400 font-jetbrains">{predictedYield.toFixed(1)}% APY</span>
+                    <span className="text-green-400 font-space-mono">{predictedYield.toFixed(1)}% APY</span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-gray-400">LTV Ratio:</span>
-                    <span className="text-white font-jetbrains">{ltvRatio}%</span>
+                    <span className="text-white font-space-mono">{ltvRatio}%</span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-gray-400">Borrowing Power:</span>
-                    <span className="text-white font-jetbrains">${borrowingLimit.toFixed(0)}</span>
+                    <span className="text-white font-space-mono">${borrowingLimit.toFixed(0)}</span>
                   </div>
                 </div>
               </div>
@@ -267,7 +267,7 @@ const CreateVaultModal: React.FC<CreateVaultModalProps> = ({ onClose }) => {
       <div className="w-full max-w-4xl bg-gradient-to-b from-gray-900 to-gray-800 rounded-lg border border-gray-700">
         {/* Header */}
         <div className="flex items-center justify-between p-6 border-b border-gray-700">
-          <h2 className="text-2xl font-orbitron font-bold text-white">Create New Vault</h2>
+          <h2 className="text-2xl font-space-mono font-bold text-white">Create New Vault</h2>
           <button
             onClick={onClose}
             className="p-2 text-gray-400 hover:text-white transition-colors duration-200"

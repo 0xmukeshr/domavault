@@ -9,7 +9,7 @@ const Header: React.FC = () => {
           <div className="w-10 h-10 bg-gradient-to-br from-neon-green to-neon-blue rounded-lg flex items-center justify-center animate-glow">
             <span className="text-black font-bold text-sm">D</span>
           </div>
-          <h1 className="text-3xl font-orbitron font-bold text-white tracking-wider">
+          <h1 className="text-3xl font-space-mono font-bold text-white tracking-wider uppercase">
             DomaVault
           </h1>
         </div>

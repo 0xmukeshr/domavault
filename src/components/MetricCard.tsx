@@ -13,7 +13,7 @@ const MetricCard: React.FC<MetricCardProps> = ({ label, value, change, positive 
       <div className="text-xs font-jetbrains uppercase tracking-wider text-gray-400 mb-2">
         {label}
       </div>
-      <div className="text-2xl font-orbitron font-bold text-white mb-1">
+      <div className="text-2xl font-space-mono font-bold text-white mb-1">
         {value}
       </div>
       <div className={`text-sm font-jetbrains ${positive ? 'text-neon-green' : 'text-red-400'}`}>

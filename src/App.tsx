@@ -12,6 +12,7 @@ import WalletPrompt from './components/WalletPrompt';
 function App() {
   const [currentPage, setCurrentPage] = useState('dashboard');
   const [isCreateVaultOpen, setIsCreateVaultOpen] = useState(false);
+  const [selectedDomain, setSelectedDomain] = useState<string | undefined>(undefined);
   const { isConnected } = useAccount();
 
   const renderCurrentPage = () => {
@@ -21,15 +22,29 @@ function App() {
 
     switch (currentPage) {
       case 'dashboard':
-        return <Dashboard onCreateVault={() => setIsCreateVaultOpen(true)} />;
+        return (
+          <Dashboard 
+            onCreateVault={() => setIsCreateVaultOpen(true)} 
+            onMintOption={(domain) => {
+              setSelectedDomain(domain);
+              setCurrentPage('options');
+            }}
+          />);
       case 'leaderboard':
         return <Leaderboard />;
       case 'options':
-        return <Options />;
+        return <Options initialSelectedVault={selectedDomain} />;
       case 'analytics':
         return <Analytics />;
       default:
-        return <Dashboard onCreateVault={() => setIsCreateVaultOpen(true)} />;
+        return (
+          <Dashboard 
+            onCreateVault={() => setIsCreateVaultOpen(true)} 
+            onMintOption={(domain) => {
+              setSelectedDomain(domain);
+              setCurrentPage('options');
+            }}
+          />);
     }
   };
 
