@@ -166,7 +166,7 @@ const Analytics: React.FC = () => {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-4xl font-space-mono font-bold text-white tracking-widest">AI ANALYTICS</h1>
+          <h1 className="text-3xl font-space-mono font-bold text-white tracking-widest">AI ANALYTICS</h1>
           <p className="text-gray-400 font-jetbrains mt-1">Comprehensive domain analytics and forecasting</p>
         </div>
         <div className="flex items-center space-x-4">

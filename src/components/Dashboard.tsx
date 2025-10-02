@@ -130,7 +130,7 @@ const Dashboard: React.FC<DashboardProps> = ({ onCreateVault, onMintOption }) =>
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-4xl font-space-mono font-bold text-white tracking-widest">VAULT DASHBOARD</h1>
+          <h1 className="text-3xl font-space-mono font-bold text-white tracking-widest">VAULT DASHBOARD</h1>
           <p className="text-gray-400 font-jetbrains mt-1">Overview of your existing vaults</p>
         </div>
         <div className="text-right">

@@ -147,7 +147,7 @@ const Options: React.FC<OptionsProps> = ({ initialSelectedVault }) => {
     <div className="space-y-8">
       {/* Header */}
       <div>
-        <h1 className="text-4xl font-space-mono font-bold text-white tracking-widest">OPTIONS PANEL</h1>
+        <h1 className="text-3xl font-space-mono font-bold text-white tracking-widest">OPTIONS PANEL</h1>
         <p className="text-gray-400 font-jetbrains mt-1">Mint and manage synthetic options on your domain vaults</p>
       </div>
 
