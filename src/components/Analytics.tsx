@@ -1,5 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { Brain, TrendingUp, Target, Star, BarChart3, Activity } from 'lucide-react';
+import { VscPulse } from 'react-icons/vsc';
+import { HiOutlineBuildingLibrary } from 'react-icons/hi2';
+import { FiArrowUpRight } from 'react-icons/fi';
+import { MdOutlineEmojiEvents } from 'react-icons/md';
 import { RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Radar, ResponsiveContainer, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip } from 'recharts';
 
 const Analytics: React.FC = () => {
@@ -166,7 +169,7 @@ const Analytics: React.FC = () => {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-space-mono font-bold text-white tracking-widest">AI ANALYTICS</h1>
+          <h1 className="text-2xl font-space-mono font-bold text-white tracking-widest">AI ANALYTICS</h1>
           <p className="text-gray-400 font-jetbrains mt-1">Comprehensive domain analytics and forecasting</p>
         </div>
         <div className="flex items-center space-x-4">
@@ -188,7 +191,7 @@ const Analytics: React.FC = () => {
       {/* Domain Overview */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <div className="bg-gradient-to-b from-gray-900 to-gray-800 border border-gray-700 rounded-lg p-6 text-center hover:border-neon-purple transition-all duration-300">
-          <Brain className="text-neon-purple mx-auto mb-3" size={32} />
+          <VscPulse className="text-neon-purple mx-auto mb-3" size={32} />
           <div className="text-xs font-jetbrains uppercase tracking-wider text-gray-400 mb-2">AI Rarity Score</div>
           <div className={`text-3xl font-space-mono font-bold ${getScoreColor(selectedDomainData?.score || 0)}`}>
             {selectedDomainData?.score}/100
@@ -196,7 +199,7 @@ const Analytics: React.FC = () => {
         </div>
 
         <div className="bg-gradient-to-b from-gray-900 to-gray-800 border border-gray-700 rounded-lg p-6 text-center hover:border-neon-blue transition-all duration-300">
-          <Target className="text-neon-blue mx-auto mb-3" size={32} />
+          <HiOutlineBuildingLibrary className="text-neon-blue mx-auto mb-3" size={32} />
           <div className="text-xs font-jetbrains uppercase tracking-wider text-gray-400 mb-2">Vault Value</div>
           <div className="text-2xl font-space-mono font-bold text-white">
             {formatCurrency(selectedDomainData?.value || 0)}
@@ -204,7 +207,7 @@ const Analytics: React.FC = () => {
         </div>
 
         <div className="bg-gradient-to-b from-gray-900 to-gray-800 border border-gray-700 rounded-lg p-6 text-center hover:border-neon-green transition-all duration-300">
-          <TrendingUp className="text-neon-green mx-auto mb-3" size={32} />
+          <FiArrowUpRight className="text-neon-green mx-auto mb-3" size={32} />
           <div className="text-xs font-jetbrains uppercase tracking-wider text-gray-400 mb-2">Predicted Yield</div>
           <div className="text-2xl font-space-mono font-bold text-neon-green">
             {selectedDomainData?.yield.toFixed(2)}%
@@ -212,7 +215,7 @@ const Analytics: React.FC = () => {
         </div>
 
         <div className="bg-gradient-to-b from-gray-900 to-gray-800 border border-gray-700 rounded-lg p-6 text-center hover:border-yellow-400 transition-all duration-300">
-          <Star className="text-yellow-400 mx-auto mb-3" size={32} />
+          <MdOutlineEmojiEvents className="text-yellow-400 mx-auto mb-3" size={32} />
           <div className="text-xs font-jetbrains uppercase tracking-wider text-gray-400 mb-2">Market Rank</div>
           <div className="text-2xl font-space-mono font-bold text-white">
             #{selectedDomainData?.rank}

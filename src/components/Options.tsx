@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
-import { TrendingUp, TrendingDown, Clock, DollarSign, BarChart3 } from 'lucide-react';
+import { HiOutlineArrowTrendingUp, HiOutlineArrowTrendingDown, HiOutlineClock, HiOutlineBanknotes, HiOutlineChartBarSquare } from 'react-icons/hi2';
+import { TbChartCandle } from 'react-icons/tb';
+import { RiStockLine } from 'react-icons/ri';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 
 interface OptionsProps {
@@ -147,7 +149,7 @@ const Options: React.FC<OptionsProps> = ({ initialSelectedVault }) => {
     <div className="space-y-8">
       {/* Header */}
       <div>
-        <h1 className="text-3xl font-space-mono font-bold text-white tracking-widest">OPTIONS PANEL</h1>
+        <h1 className="text-2xl font-space-mono font-bold text-white tracking-widest">OPTIONS PANEL</h1>
         <p className="text-gray-400 font-jetbrains mt-1">Mint and manage synthetic options on your domain vaults</p>
       </div>
 
@@ -284,7 +286,7 @@ const Options: React.FC<OptionsProps> = ({ initialSelectedVault }) => {
                 disabled={mintingOption}
                 className="px-8 py-4 bg-gradient-to-r from-green-600 to-green-700 rounded-lg text-white font-jetbrains font-medium transition-all duration-200 hover:from-green-700 hover:to-green-800 hover:scale-[1.02] flex items-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                <TrendingUp size={20} />
+                {optionType === 'CALL' ? <HiOutlineArrowTrendingUp size={20} /> : <HiOutlineArrowTrendingDown size={20} />}
                 <span>{mintingOption ? 'Minting...' : `Mint ${optionType} Option`}</span>
               </button>
             </div>
@@ -309,9 +311,9 @@ const Options: React.FC<OptionsProps> = ({ initialSelectedVault }) => {
                     </div>
                     <div className="flex items-center space-x-2">
                       {option.type === 'CALL' ? (
-                        <TrendingUp size={16} className="text-neon-green" />
+                        <HiOutlineArrowTrendingUp size={16} className="text-neon-green" />
                       ) : (
-                        <TrendingDown size={16} className="text-red-400" />
+                        <HiOutlineArrowTrendingDown size={16} className="text-red-400" />
                       )}
                       <span className="text-sm font-jetbrains text-white">{option.type}</span>
                       <span className="text-xs text-gray-400">Qty:{option.quantity}</span>

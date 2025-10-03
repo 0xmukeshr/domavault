@@ -4,7 +4,7 @@ import MetricCard from './MetricCard';
 import VaultCard from './VaultCard';
 import PortfolioChart from './PortfolioChart';
 import YieldChart from './YieldChart';
-import { Plus } from 'lucide-react';
+import { HiOutlinePlusCircle } from 'react-icons/hi2';
 
 interface DashboardProps {
   onCreateVault: () => void;
@@ -130,7 +130,7 @@ const Dashboard: React.FC<DashboardProps> = ({ onCreateVault, onMintOption }) =>
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-space-mono font-bold text-white tracking-widest">VAULT DASHBOARD</h1>
+          <h1 className="text-2xl font-space-mono font-bold text-white tracking-widest">VAULT DASHBOARD</h1>
           <p className="text-gray-400 font-jetbrains mt-1">Overview of your existing vaults</p>
         </div>
         <div className="text-right">
@@ -161,9 +161,9 @@ const Dashboard: React.FC<DashboardProps> = ({ onCreateVault, onMintOption }) =>
       <div className="flex justify-center py-6">
         <button
           onClick={onCreateVault}
-          className="flex items-center space-x-3 px-8 py-4 bg-gray-900 border border-neon-green rounded-lg text-white font-space-mono font-medium transition-all duration-200 hover:bg-gray-800 hover:shadow-lg hover:shadow-neon-green/20 hover:scale-[1.02] animate-glow"
+          className="flex items-center space-x-3 px-8 py-4 bg-gray-900 border border-neon-green rounded-lg text-white font-space-mono font-medium transition-all duration-200 hover:bg-gray-800 hover:shadow-lg hover:shadow-neon-green/20 hover:scale-[1.02]"
         >
-          <Plus size={24} />
+          <HiOutlinePlusCircle size={24} />
           <span className="text-lg">Create New Vault</span>
         </button>
       </div>

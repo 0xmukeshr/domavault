@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
-import { X, Check, ChevronRight } from 'lucide-react';
+import { HiOutlineXMark, HiOutlineCheckCircle, HiOutlineChevronRight, HiOutlineSparkles } from 'react-icons/hi2';
+import { RiFileCloseRegular } from 'react-icons/ri';
+import { TbDiamond } from 'react-icons/tb';
 
 interface CreateVaultModalProps {
   onClose: () => void;
@@ -272,7 +274,7 @@ const CreateVaultModal: React.FC<CreateVaultModalProps> = ({ onClose }) => {
             onClick={onClose}
             className="p-2 text-gray-400 hover:text-white transition-colors duration-200"
           >
-            <X size={24} />
+            <HiOutlineXMark size={24} />
           </button>
         </div>
 
@@ -288,7 +290,7 @@ const CreateVaultModal: React.FC<CreateVaultModalProps> = ({ onClose }) => {
                     ? 'border-green-500 text-green-500'
                     : 'border-gray-600 text-gray-400'
                 }`}>
-                  {step.completed ? <Check size={16} /> : step.id}
+                  {step.completed ? <HiOutlineCheckCircle size={16} /> : step.id}
                 </div>
                 <span className={`ml-2 text-sm font-jetbrains ${
                   currentStep === step.id ? 'text-white' : 'text-gray-400'
@@ -296,7 +298,7 @@ const CreateVaultModal: React.FC<CreateVaultModalProps> = ({ onClose }) => {
                   {step.label}
                 </span>
                 {index < steps.length - 1 && (
-                  <ChevronRight size={16} className="mx-4 text-gray-600" />
+                  <HiOutlineChevronRight size={16} className="mx-4 text-gray-600" />
                 )}
               </div>
             ))}

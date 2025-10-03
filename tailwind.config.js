@@ -8,6 +8,11 @@ export default {
         'orbitron': ['Orbitron', 'sans-serif'],
         'space-mono': ['Space Mono', 'monospace'],
         'michroma': ['Michroma', 'sans-serif'],
+        'exo': ['Exo 2', 'sans-serif'],
+        'playfair': ['Playfair Display', 'serif'],
+        'cinzel': ['Cinzel', 'serif'],
+        'righteous': ['Righteous', 'cursive'],
+        'permanent-marker': ['Permanent Marker', 'cursive'],
       },
       colors: {
         'neon-green': '#00ff41',

@@ -1,5 +1,8 @@
 import React from 'react';
-import { BarChart3, Plus, Trophy, TrendingUp, Brain } from 'lucide-react';
+import { HiOutlinePlusCircle, HiOutlineChartBarSquare } from 'react-icons/hi2';
+import { RiDashboardLine, RiStockLine } from 'react-icons/ri';
+import { MdOutlineLeaderboard } from 'react-icons/md';
+import { TbBrain } from 'react-icons/tb';
 
 interface NavigationProps {
   currentPage: string;
@@ -9,11 +12,11 @@ interface NavigationProps {
 
 const Navigation: React.FC<NavigationProps> = ({ currentPage, onPageChange, onCreateVault }) => {
   const navItems = [
-    { id: 'dashboard', label: 'Dashboard', icon: BarChart3 },
-    { id: 'create', label: 'Create Vault', icon: Plus },
-    { id: 'leaderboard', label: 'Leaderboard', icon: Trophy },
-    { id: 'options', label: 'Options', icon: TrendingUp },
-    { id: 'analytics', label: 'Analytics', icon: Brain },
+    { id: 'dashboard', label: 'Dashboard', icon: RiDashboardLine },
+    { id: 'create', label: 'Create Vault', icon: HiOutlinePlusCircle },
+    { id: 'leaderboard', label: 'Leaderboard', icon: MdOutlineLeaderboard },
+    { id: 'options', label: 'Options', icon: RiStockLine },
+    { id: 'analytics', label: 'Analytics', icon: TbBrain },
   ];
 
   return (
