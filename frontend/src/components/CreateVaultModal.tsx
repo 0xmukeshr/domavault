@@ -14,7 +14,7 @@ const CreateVaultModal: React.FC<CreateVaultModalProps> = ({ onClose }) => {
   const { address, isConnected } = useAccount();
   const [currentStep, setCurrentStep] = useState(1);
   const [selectedNFT, setSelectedNFT] = useState<string>('');
-  const [stakeAmount, setStakeAmount] = useState('10000');
+  const [stakeAmount, setStakeAmount] = useState('20');
   const [ltvRatio, setLtvRatio] = useState(65);
   const [ownedNFTs, setOwnedNFTs] = useState<DomainNFT[]>([]);
   const [loading, setLoading] = useState(false);

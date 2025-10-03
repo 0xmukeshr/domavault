@@ -25,6 +25,8 @@ interface VaultCardProps {
   lastBorrowedAmount?: number;
   claimableAmount: number;
   claimHistory: { amount: number; date: string }[];
+  borrowedAmount?: number;
+  interestAccrued?: number;
 }
 
 const VaultCard: React.FC<VaultCardProps> = ({
@@ -51,6 +53,8 @@ const VaultCard: React.FC<VaultCardProps> = ({
   lastBorrowedAmount,
   claimableAmount,
   claimHistory,
+  borrowedAmount = 0,
+  interestAccrued = 0,
 }) => {
   const getScoreColor = (score: number) => {
     if (score >= 90) return 'text-green-400';

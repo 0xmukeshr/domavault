@@ -8,6 +8,18 @@ export default defineConfig({
     headers: {
       'Cross-Origin-Opener-Policy': 'unsafe-none',
     },
+    proxy: {
+      '/api': {
+        target: 'https://api-testnet.doma.xyz',
+        changeOrigin: true,
+        secure: true,
+        rewrite: (path) => path.replace(/^\/api/, ''),
+        headers: {
+          'Accept': 'application/json',
+          'Content-Type': 'application/json',
+        }
+      }
+    }
   },
   optimizeDeps: {
     exclude: ['lucide-react'],
