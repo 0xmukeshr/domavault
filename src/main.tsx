@@ -36,6 +36,7 @@ const config = getDefaultConfig({
   appName: 'DomaVault',
   projectId: 'domavault-demo-project-id', // Using a placeholder ID to avoid 403 errors
   chains: [domaTestnet, mainnet, polygon, optimism, arbitrum, base],
+  initialChain: domaTestnet, // Set Doma Testnet as the initial/default chain
   ssr: false,
 });
 
