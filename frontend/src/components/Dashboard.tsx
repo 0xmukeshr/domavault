@@ -1,10 +1,12 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAccount } from 'wagmi';
+import { ethers } from 'ethers';
 import MetricCard from './MetricCard';
 import VaultCard from './VaultCard';
 import PortfolioChart from './PortfolioChart';
 import YieldChart from './YieldChart';
 import { HiOutlinePlusCircle } from 'react-icons/hi2';
+import { contractService, VaultDetails } from '../services/contractService';
 
 interface DashboardProps {
   onCreateVault: () => void;
@@ -12,7 +14,7 @@ interface DashboardProps {
 }
 
 const Dashboard: React.FC<DashboardProps> = ({ onCreateVault, onMintOption }) => {
-  const { address } = useAccount();
+  const { address, isConnected } = useAccount();
   const [claimingYield, setClaimingYield] = useState<string | null>(null);
   const [borrowing, setBorrowing] = useState<string | null>(null);
   const [mintingOption, setMintingOption] = useState<string | null>(null);
@@ -21,56 +23,126 @@ const Dashboard: React.FC<DashboardProps> = ({ onCreateVault, onMintOption }) =>
   const [lastBorrowed, setLastBorrowed] = useState<Record<string, number>>({});
   const [claimHistory, setClaimHistory] = useState<Record<string, { amount: number; date: string }[]>>({});
   const [claimableYield, setClaimableYield] = useState<Record<string, number>>({});
+  const [vaults, setVaults] = useState<VaultDetails[]>([]);
+  const [protocolStats, setProtocolStats] = useState({ tvl: '0', borrowed: '0' });
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [usdcBalance, setUsdcBalance] = useState('0');
 
-  const metrics = [
-    { label: 'Total Vault Value', value: '$125,430.50', change: '+15.2%', positive: true },
-    { label: 'Active Vaults', value: '7', change: '+2', positive: true },
-    { label: 'Pending Yield', value: '$2,341.20', change: '+8.5%', positive: true },
-    { label: 'Average ROI', value: '16.8%', change: '+2.1%', positive: true },
-  ];
+  // Initialize contract service and load data
+  useEffect(() => {
+    const initializeAndLoadData = async () => {
+      if (!isConnected || !address || !window.ethereum) {
+        console.log('[Dashboard] Not connected or no address');
+        return;
+      }
 
-  const vaults = [
-    {
-      domain: 'crypto.eth',
-      aiScore: 94,
-      vaultValue: 42500,
-      currentYield: 18.5,
-      ltvRatio: 65,
-      availableToBorrow: 27625,
-      deltaValue: 8.2,
-      deltaYield: 2.1,
-    },
-    {
-      domain: 'defi.com',
-      aiScore: 87,
-      vaultValue: 35200,
-      currentYield: 15.2,
-      ltvRatio: 70,
-      availableToBorrow: 24640,
-      deltaValue: -2.1,
-      deltaYield: 0.8,
-    },
-    {
-      domain: 'web3.io',
-      aiScore: 91,
-      vaultValue: 28900,
-      currentYield: 17.3,
-      ltvRatio: 60,
-      availableToBorrow: 17340,
-      deltaValue: 12.8,
-      deltaYield: 3.2,
-    },
-    {
-      domain: 'nft.org',
-      aiScore: 76,
-      vaultValue: 18830,
-      currentYield: 13.9,
-      ltvRatio: 55,
-      availableToBorrow: 10356,
-      deltaValue: 5.4,
-      deltaYield: 1.7,
-    },
-  ];
+      setLoading(true);
+      setError(null);
+
+      try {
+        console.log('[Dashboard] Initializing contract service for address:', address);
+        
+        const provider = new ethers.BrowserProvider(window.ethereum);
+        await contractService.initialize(provider);
+        
+        console.log('[Dashboard] Loading user data...');
+        await Promise.all([
+          loadUserVaults(),
+          loadProtocolStats(),
+          loadUserBalance()
+        ]);
+        
+        console.log('[Dashboard] All data loaded successfully');
+      } catch (err) {
+        console.error('[Dashboard] Error initializing:', err);
+        setError(err instanceof Error ? err.message : 'Failed to load data');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    initializeAndLoadData();
+  }, [isConnected, address]);
+
+  const loadUserVaults = async () => {
+    if (!address) return;
+    
+    try {
+      console.log('[Dashboard] Loading user vaults...');
+      const userVaults = await contractService.getUserVaults(address);
+      console.log('[Dashboard] Loaded vaults:', userVaults);
+      setVaults(userVaults);
+    } catch (err) {
+      console.error('[Dashboard] Error loading vaults:', err);
+      throw err;
+    }
+  };
+
+  const loadProtocolStats = async () => {
+    try {
+      console.log('[Dashboard] Loading protocol stats...');
+      const stats = await contractService.getProtocolStats();
+      console.log('[Dashboard] Protocol stats:', stats);
+      setProtocolStats(stats);
+    } catch (err) {
+      console.error('[Dashboard] Error loading protocol stats:', err);
+      throw err;
+    }
+  };
+
+  const loadUserBalance = async () => {
+    if (!address) return;
+    
+    try {
+      console.log('[Dashboard] Loading USDC balance...');
+      const balance = await contractService.getUSDCBalance(address);
+      console.log('[Dashboard] USDC balance:', balance);
+      setUsdcBalance(balance);
+    } catch (err) {
+      console.error('[Dashboard] Error loading balance:', err);
+      // Don't throw here, balance is not critical
+    }
+  };
+
+  const calculateMetrics = () => {
+    const totalVaultValue = vaults.reduce((sum, vault) => sum + parseFloat(vault.collateralValue), 0);
+    const totalBorrowed = vaults.reduce((sum, vault) => sum + parseFloat(vault.borrowedAmount), 0);
+    const totalInterest = vaults.reduce((sum, vault) => sum + parseFloat(vault.interestAccrued), 0);
+    const averageLTV = vaults.length > 0 
+      ? vaults.reduce((sum, vault) => sum + parseFloat(vault.currentLTV), 0) / vaults.length 
+      : 0;
+
+    return [
+      { 
+        label: 'Total Vault Value', 
+        value: `$${totalVaultValue.toLocaleString()}`, 
+        change: '+0%', 
+        positive: true 
+      },
+      { 
+        label: 'Active Vaults', 
+        value: vaults.filter(v => v.isActive).length.toString(), 
+        change: `+${vaults.length}`, 
+        positive: true 
+      },
+      { 
+        label: 'Total Borrowed', 
+        value: `$${totalBorrowed.toLocaleString()}`, 
+        change: '+0%', 
+        positive: true 
+      },
+      { 
+        label: 'Average LTV', 
+        value: `${averageLTV.toFixed(1)}%`, 
+        change: '+0%', 
+        positive: averageLTV < 70 
+      },
+    ];
+  };
+
+  const metrics = calculateMetrics();
+
 
   const handleClaimYield = async (domain: string) => {
     // Initialize claimable yield lazily if not set
@@ -116,13 +188,50 @@ const Dashboard: React.FC<DashboardProps> = ({ onCreateVault, onMintOption }) =>
     setCardView(prev => ({ ...prev, [domain]: prev[domain] === 'details' ? 'default' : 'details' }));
   };
 
-  const handleBorrowConfirm = async (domain: string, amount: number) => {
-    setBorrowing(domain);
-    // Simulate transaction
-    await new Promise(resolve => setTimeout(resolve, 2000));
-    setBorrowing(null);
-    setLastBorrowed(prev => ({ ...prev, [domain]: amount }));
-    // Stay on borrow screen to show success state
+  const handleBorrowConfirm = async (vaultId: string, amount: number) => {
+    setBorrowing(vaultId);
+    
+    try {
+      console.log('[Dashboard] Borrowing from vault:', { vaultId, amount });
+      const txHash = await contractService.borrowFromVault(vaultId, amount.toString());
+      console.log('[Dashboard] Borrow transaction hash:', txHash);
+      
+      setLastBorrowed(prev => ({ ...prev, [vaultId]: amount }));
+      
+      // Reload data after successful borrow
+      await loadUserVaults();
+      await loadProtocolStats();
+      await loadUserBalance();
+      
+      console.log('[Dashboard] Borrow completed successfully');
+    } catch (err) {
+      console.error('[Dashboard] Error borrowing:', err);
+      setError(err instanceof Error ? err.message : 'Failed to borrow');
+    } finally {
+      setBorrowing(null);
+    }
+  };
+
+  const handleRepayConfirm = async (vaultId: string, amount: number) => {
+    setBorrowing(vaultId); // Use borrowing state for repay too
+    
+    try {
+      console.log('[Dashboard] Repaying vault:', { vaultId, amount });
+      const txHash = await contractService.repayVault(vaultId, amount.toString());
+      console.log('[Dashboard] Repay transaction hash:', txHash);
+      
+      // Reload data after successful repay
+      await loadUserVaults();
+      await loadProtocolStats();
+      await loadUserBalance();
+      
+      console.log('[Dashboard] Repay completed successfully');
+    } catch (err) {
+      console.error('[Dashboard] Error repaying:', err);
+      setError(err instanceof Error ? err.message : 'Failed to repay');
+    } finally {
+      setBorrowing(null);
+    }
   };
 
   return (
@@ -134,7 +243,22 @@ const Dashboard: React.FC<DashboardProps> = ({ onCreateVault, onMintOption }) =>
           <p className="text-gray-400 font-jetbrains mt-1">Overview of your existing vaults</p>
         </div>
         <div className="text-right">
-          <div className="text-sm font-jetbrains uppercase tracking-wide text-gray-400">Connected: {address?.slice(0, 6)}...{address?.slice(-4)}</div>
+          <div className="text-sm font-jetbrains uppercase tracking-wide text-gray-400 mb-1">
+            Connected: {address?.slice(0, 6)}...{address?.slice(-4)}
+          </div>
+          <div className="text-xs text-gray-500">
+            USDC Balance: ${parseFloat(usdcBalance).toLocaleString()}
+          </div>
+          {loading && (
+            <div className="text-xs text-blue-400 animate-pulse">
+              Loading...
+            </div>
+          )}
+          {error && (
+            <div className="text-xs text-red-400">
+              {error}
+            </div>
+          )}
         </div>
       </div>
 
@@ -169,28 +293,62 @@ const Dashboard: React.FC<DashboardProps> = ({ onCreateVault, onMintOption }) =>
       </div>
 
       {/* Vault Cards */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {vaults.map((vault) => (
-          <VaultCard 
-            key={vault.domain} 
-            {...vault} 
-            onClaimYield={() => handleClaimYield(vault.domain)}
-            onBorrow={() => handleBorrow(vault.domain)}
-            onMintOption={() => handleMintOption(vault.domain)}
-            onDetails={() => handleDetails(vault.domain)}
-            onBorrowConfirm={(amount) => handleBorrowConfirm(vault.domain, amount)}
-            onClaimConfirm={(amount) => handleClaimConfirm(vault.domain, amount)}
-            cardView={cardView[vault.domain] || 'default'}
-            claimingYield={claimingYield === vault.domain}
-            borrowing={borrowing === vault.domain}
-            mintingOption={mintingOption === vault.domain}
-            lastClaimedAmount={lastClaimed[vault.domain]}
-            lastBorrowedAmount={lastBorrowed[vault.domain]}
-            claimableAmount={claimableYield[vault.domain] !== undefined ? claimableYield[vault.domain] : Math.floor(vault.vaultValue * vault.currentYield / 100 / 12)}
-            claimHistory={claimHistory[vault.domain] || []}
-          />
-        ))}
-      </div>
+      {vaults.length === 0 ? (
+        <div className="text-center py-12">
+          <div className="text-gray-400 text-lg mb-4">No vaults found</div>
+          <div className="text-gray-500 text-sm mb-6">Create your first vault to start earning yield on your domain assets</div>
+          <button
+            onClick={onCreateVault}
+            className="px-6 py-3 bg-gradient-to-r from-green-600 to-green-700 rounded-lg text-white font-jetbrains font-medium transition-all duration-200 hover:from-green-700 hover:to-green-800"
+          >
+            Create First Vault
+          </button>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {vaults.map((vault) => {
+            const collateralValue = parseFloat(vault.collateralValue);
+            const borrowedAmount = parseFloat(vault.borrowedAmount);
+            const ltvRatio = parseFloat(vault.currentLTV);
+            const aiScore = parseInt(vault.aiScore);
+            const availableToBorrow = collateralValue * 0.7 - borrowedAmount; // 70% LTV
+            
+            // Convert vault data to match VaultCard interface
+            const vaultCardData = {
+              domain: vault.domainName,
+              aiScore,
+              vaultValue: collateralValue,
+              currentYield: 15.0, // Mock yield for now
+              ltvRatio,
+              availableToBorrow: Math.max(0, availableToBorrow),
+              deltaValue: 0, // Mock delta
+              deltaYield: 0, // Mock delta
+            };
+            
+            return (
+              <VaultCard 
+                key={vault.vaultId} 
+                {...vaultCardData}
+                onClaimYield={() => handleClaimYield(vault.vaultId)}
+                onBorrow={() => handleBorrow(vault.vaultId)}
+                onMintOption={() => handleMintOption(vault.domainName)}
+                onDetails={() => handleDetails(vault.vaultId)}
+                onBorrowConfirm={(amount) => handleBorrowConfirm(vault.vaultId, amount)}
+                onRepayConfirm={(amount) => handleRepayConfirm(vault.vaultId, amount)}
+                onClaimConfirm={(amount) => handleClaimConfirm(vault.vaultId, amount)}
+                cardView={cardView[vault.vaultId] || 'default'}
+                claimingYield={claimingYield === vault.vaultId}
+                borrowing={borrowing === vault.vaultId}
+                mintingOption={mintingOption === vault.vaultId}
+                lastClaimedAmount={lastClaimed[vault.vaultId]}
+                lastBorrowedAmount={lastBorrowed[vault.vaultId]}
+                claimableAmount={claimableYield[vault.vaultId] !== undefined ? claimableYield[vault.vaultId] : Math.floor(collateralValue * 15 / 100 / 12)}
+                claimHistory={claimHistory[vault.vaultId] || []}
+              />
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 };

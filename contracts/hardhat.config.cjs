@@ -16,7 +16,8 @@ module.exports = {
       url: "https://rpc-testnet.doma.xyz",
       chainId: 97476,
       accounts: process.env.PRIVATE_KEY ? [process.env.PRIVATE_KEY] : [],
-      gasPrice: 20000000000, // 20 gwei
+      gasPrice: 100000000, // 0.1 gwei (further reduced)
+      gas: 6000000, // Set gas limit
     },
     // Keep localhost for testing
     hardhat: {

@@ -16,6 +16,7 @@ interface VaultCardProps {
   onDetails: () => void;
   onBorrowConfirm: (amount: number) => void;
   onClaimConfirm: (amount: number) => void;
+  onRepayConfirm?: (amount: number) => void;
   cardView: 'default' | 'claim' | 'borrow' | 'details';
   claimingYield: boolean;
   borrowing: boolean;
@@ -41,6 +42,7 @@ const VaultCard: React.FC<VaultCardProps> = ({
   onDetails,
   onBorrowConfirm,
   onClaimConfirm,
+  onRepayConfirm,
   cardView,
   claimingYield,
   borrowing,
@@ -65,7 +67,8 @@ const VaultCard: React.FC<VaultCardProps> = ({
     }).format(amount);
   };
 
-const [borrowAmount, setBorrowAmount] = useState(Math.floor(availableToBorrow * 0.75));
+const [borrowAmount, setBorrowAmount] = useState(Math.floor(availableToBorrow * 0.5));
+  const [repayAmount, setRepayAmount] = useState(0);
   const monthlyYield = (vaultValue * currentYield / 100 / 12).toFixed(0);
 
   const renderClaimView = () => (
@@ -183,13 +186,28 @@ const [borrowAmount, setBorrowAmount] = useState(Math.floor(availableToBorrow * 
             </div>
           </div>
 
-          <button 
-            onClick={() => onBorrowConfirm(borrowAmount)}
-            disabled={borrowing}
-            className="w-full px-4 py-3 bg-gradient-to-r from-blue-600 to-blue-700 rounded-lg text-white font-jetbrains font-medium transition-all hover:from-blue-700 hover:to-blue-800 disabled:opacity-50"
-          >
-            {borrowing ? 'Processing...' : 'Confirm Borrow'}
-          </button>
+          <div className="flex space-x-3">
+            <button 
+              onClick={() => onBorrowConfirm(borrowAmount)}
+              disabled={borrowing}
+              className="flex-1 px-4 py-3 bg-gradient-to-r from-blue-600 to-blue-700 rounded-lg text-white font-jetbrains font-medium transition-all hover:from-blue-700 hover:to-blue-800 disabled:opacity-50"
+            >
+              {borrowing ? 'Processing...' : 'Borrow'}
+            </button>
+            {parseFloat(borrowedAmount.toString()) > 0 && onRepayConfirm && (
+              <button 
+                onClick={() => {
+                  const maxRepay = parseFloat(borrowedAmount.toString()) + parseFloat(interestAccrued?.toString() || '0');
+                  const repayAmt = Math.min(repayAmount || maxRepay, maxRepay);
+                  onRepayConfirm(repayAmt);
+                }}
+                disabled={borrowing}
+                className="flex-1 px-4 py-3 bg-gradient-to-r from-green-600 to-green-700 rounded-lg text-white font-jetbrains font-medium transition-all hover:from-green-700 hover:to-green-800 disabled:opacity-50"
+              >
+                Repay
+              </button>
+            )}
+          </div>
 
           {lastBorrowedAmount && (
             <div className="mt-4 p-3 bg-blue-900/20 border border-blue-600 rounded-lg text-center">

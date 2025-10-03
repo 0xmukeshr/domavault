@@ -1,26 +1,85 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useAccount } from 'wagmi';
+import { ethers } from 'ethers';
 import { HiOutlineXMark, HiOutlineCheckCircle, HiOutlineChevronRight, HiOutlineSparkles } from 'react-icons/hi2';
 import { RiFileCloseRegular } from 'react-icons/ri';
 import { TbDiamond } from 'react-icons/tb';
+import { contractService, DomainNFT } from '../services/contractService';
 
 interface CreateVaultModalProps {
   onClose: () => void;
 }
 
 const CreateVaultModal: React.FC<CreateVaultModalProps> = ({ onClose }) => {
+  const { address, isConnected } = useAccount();
   const [currentStep, setCurrentStep] = useState(1);
   const [selectedNFT, setSelectedNFT] = useState<string>('');
   const [stakeAmount, setStakeAmount] = useState('10000');
   const [ltvRatio, setLtvRatio] = useState(65);
+  const [ownedNFTs, setOwnedNFTs] = useState<DomainNFT[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [creatingVault, setCreatingVault] = useState(false);
 
-  const nfts = [
-    { name: 'crypto.com', tld: '.com', length: 6, score: 94 },
-    { name: 'defi.eth', tld: '.eth', length: 4, score: 91 },
-    { name: 'web3.org', tld: '.org', length: 4, score: 87 },
-    { name: 'nft.io', tld: '.io', length: 3, score: 96 },
-    { name: 'dao.xyz', tld: '.xyz', length: 3, score: 82 },
-    { name: 'mint.co', tld: '.co', length: 4, score: 76 },
-  ];
+  // Load owned NFTs when modal opens
+  useEffect(() => {
+    const loadOwnedNFTs = async () => {
+      if (!isConnected || !address || !window.ethereum) {
+        console.log('[CreateVaultModal] Not connected or no address');
+        return;
+      }
+
+      setLoading(true);
+      setError(null);
+
+      try {
+        console.log('[CreateVaultModal] Loading owned NFTs for:', address);
+        
+        const provider = new ethers.BrowserProvider(window.ethereum);
+        await contractService.initialize(provider);
+        
+        const nfts = await contractService.getOwnedNFTs(address);
+        console.log('[CreateVaultModal] Owned NFTs:', nfts);
+        
+        // If no NFTs found, show mock NFTs for testing
+        if (nfts.length === 0) {
+          console.log('[CreateVaultModal] No NFTs found, showing mock NFTs');
+          const mockNFTs: DomainNFT[] = [
+            { tokenId: '1', name: 'crypto.io', owned: false },
+            { tokenId: '2', name: 'web3.io', owned: false },
+            { tokenId: '3', name: 'defi.io', owned: false }
+          ];
+          setOwnedNFTs(mockNFTs);
+        } else {
+          setOwnedNFTs(nfts);
+        }
+      } catch (err) {
+        console.error('[CreateVaultModal] Error loading NFTs:', err);
+        setError(err instanceof Error ? err.message : 'Failed to load NFTs');
+        
+        // Show mock NFTs on error
+        const mockNFTs: DomainNFT[] = [
+          { tokenId: '1', name: 'crypto.io', owned: false },
+          { tokenId: '2', name: 'web3.io', owned: false },
+          { tokenId: '3', name: 'defi.io', owned: false }
+        ];
+        setOwnedNFTs(mockNFTs);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadOwnedNFTs();
+  }, [isConnected, address]);
+
+  const nfts = ownedNFTs.map(nft => ({
+    id: nft.tokenId,
+    name: nft.name,
+    tld: nft.name.includes('.') ? nft.name.substring(nft.name.lastIndexOf('.')) : '.io',
+    length: nft.name.split('.')[0].length,
+    score: Math.floor(Math.random() * 30) + 70, // Mock score between 70-100
+    owned: nft.owned
+  }));
 
   const steps = [
     { id: 1, label: 'Select NFT', completed: currentStep > 1 },
@@ -29,7 +88,7 @@ const CreateVaultModal: React.FC<CreateVaultModalProps> = ({ onClose }) => {
     { id: 4, label: 'Confirm', completed: false },
   ];
 
-  const selectedNFTData = nfts.find(nft => nft.name === selectedNFT);
+  const selectedNFTData = nfts.find(nft => nft.id === selectedNFT);
   const predictedYield = selectedNFTData ? 8.5 + (selectedNFTData.score - 50) * 0.2 : 8.5;
   const monthlyYield = (parseFloat(stakeAmount) * (predictedYield / 100)) / 12;
   const borrowingLimit = parseFloat(stakeAmount) * (ltvRatio / 100);
@@ -40,30 +99,47 @@ const CreateVaultModal: React.FC<CreateVaultModalProps> = ({ onClose }) => {
         return (
           <div>
             <h3 className="text-xl font-space-mono font-bold text-white mb-6">Select Your Domain NFT</h3>
-            <div className="grid grid-cols-3 gap-4">
-              {nfts.map((nft) => (
-                <div
-                  key={nft.name}
-                  onClick={() => setSelectedNFT(nft.name)}
-                  className={`p-4 rounded-lg border-2 cursor-pointer transition-all duration-200 ${
-                    selectedNFT === nft.name
-                      ? 'border-green-500 bg-green-500/10'
-                      : 'border-gray-600 bg-gray-800 hover:border-gray-500'
-                  }`}
-                >
-                  <div className="text-lg font-space-mono font-bold text-white mb-2">{nft.name}</div>
-                  <div className="text-sm text-gray-400 space-y-1">
-                    <div>TLD: {nft.tld}</div>
-                    <div>Length: {nft.length}</div>
+            {loading ? (
+              <div className="text-center py-8">
+                <div className="text-gray-400 animate-pulse">Loading your NFTs...</div>
+              </div>
+            ) : error ? (
+              <div className="text-center py-8">
+                <div className="text-red-400 mb-4">Error loading NFTs: {error}</div>
+                <div className="text-gray-400 text-sm">Showing mock NFTs for testing</div>
+              </div>
+            ) : (
+              <div className="grid grid-cols-3 gap-4">
+                {nfts.map((nft) => (
+                  <div
+                    key={nft.id}
+                    onClick={() => setSelectedNFT(nft.id)}
+                    className={`p-4 rounded-lg border-2 cursor-pointer transition-all duration-200 relative ${
+                      selectedNFT === nft.id
+                        ? 'border-green-500 bg-green-500/10'
+                        : 'border-gray-600 bg-gray-800 hover:border-gray-500'
+                    }`}
+                  >
+                    <div className="text-lg font-space-mono font-bold text-white mb-2">{nft.name}</div>
+                    <div className="text-sm text-gray-400 space-y-1">
+                      <div>TLD: {nft.tld}</div>
+                      <div>Length: {nft.length}</div>
+                      <div>Score: {nft.score}/100</div>
+                    </div>
+                    {!nft.owned && (
+                      <div className="absolute top-2 right-2 bg-yellow-500 text-black text-xs px-2 py-1 rounded">
+                        Mock
+                      </div>
+                    )}
+                    {selectedNFT === nft.id && (
+                      <button className="w-full mt-3 px-4 py-2 bg-green-600 text-white rounded-lg font-jetbrains text-sm">
+                        Selected
+                      </button>
+                    )}
                   </div>
-                  {selectedNFT === nft.name && (
-                    <button className="w-full mt-3 px-4 py-2 bg-green-600 text-white rounded-lg font-jetbrains text-sm">
-                      Selected
-                    </button>
-                  )}
-                </div>
-              ))}
-            </div>
+                ))}
+              </div>
+            )}
           </div>
         );
 
@@ -255,12 +331,46 @@ const CreateVaultModal: React.FC<CreateVaultModalProps> = ({ onClose }) => {
     }
   };
 
-  const handleNext = () => {
+  const handleNext = async () => {
     if (currentStep < 4) {
       setCurrentStep(currentStep + 1);
     } else {
-      // Create vault logic here
+      // Create vault
+      await createVault();
+    }
+  };
+
+  const createVault = async () => {
+    if (!selectedNFT) {
+      setError('Please select an NFT');
+      return;
+    }
+
+    const selectedNFTData = nfts.find(nft => nft.id === selectedNFT);
+    if (!selectedNFTData) {
+      setError('Selected NFT not found');
+      return;
+    }
+
+    setCreatingVault(true);
+    setError(null);
+
+    try {
+      console.log('[CreateVaultModal] Creating vault:', {
+        tokenId: selectedNFT,
+        domainName: selectedNFTData.name
+      });
+      
+      const txHash = await contractService.createVault(selectedNFT, selectedNFTData.name);
+      console.log('[CreateVaultModal] Vault creation transaction hash:', txHash);
+      
+      console.log('[CreateVaultModal] Vault created successfully!');
       onClose();
+    } catch (err) {
+      console.error('[CreateVaultModal] Error creating vault:', err);
+      setError(err instanceof Error ? err.message : 'Failed to create vault');
+    } finally {
+      setCreatingVault(false);
     }
   };
 
@@ -314,6 +424,11 @@ const CreateVaultModal: React.FC<CreateVaultModalProps> = ({ onClose }) => {
         {/* Content */}
         <div className="p-6 min-h-[400px]">
           {renderStep()}
+          {error && (
+            <div className="mt-4 p-3 bg-red-900/20 border border-red-600 rounded-lg">
+              <div className="text-red-400 text-sm">{error}</div>
+            </div>
+          )}
         </div>
 
         {/* Footer */}
@@ -331,14 +446,14 @@ const CreateVaultModal: React.FC<CreateVaultModalProps> = ({ onClose }) => {
           </button>
           <button
             onClick={handleNext}
-            disabled={!canProceed()}
+            disabled={!canProceed() || creatingVault}
             className={`px-6 py-2 rounded-lg font-jetbrains ${
-              canProceed()
+              canProceed() && !creatingVault
                 ? 'bg-gradient-to-r from-green-600 to-green-700 text-white hover:from-green-700 hover:to-green-800'
                 : 'bg-gray-800 text-gray-500 cursor-not-allowed'
             }`}
           >
-            {currentStep === 4 ? 'Create Vault' : 'Next'}
+            {creatingVault ? 'Creating...' : (currentStep === 4 ? 'Create Vault' : 'Next')}
           </button>
         </div>
       </div>
