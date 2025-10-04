@@ -290,7 +290,142 @@ const Analytics: React.FC = () => {
     return result;
   };
 
-  // API call function with fallback
+  // Try GraphQL API first
+  const tryGraphQLAPI = async (domain: string, userApiKey: string): Promise<AnalysisResult | null> => {
+    try {
+      console.log('[Analytics] Trying GraphQL API...');
+      
+      // GraphQL query for domain analysis
+      const query = `
+        query AnalyzeDomain($domainName: String!) {
+          analyzeDomain(domainName: $domainName) {
+            success
+            domainName
+            overallScore
+            riskTier
+            collateralValue
+            maxLTV
+            maxLoanAmount
+            stakingAPY
+            onChainMetrics {
+              tokenActivity {
+                score
+                breakdown
+              }
+              nameActivity {
+                score
+                breakdown
+              }
+              liquidityMetrics {
+                score
+                totalVolume
+                uniqueBuyers
+                uniqueSellers
+              }
+              ownershipStability {
+                score
+                transferFrequency
+                transferCount
+              }
+            }
+            offChainMetrics {
+              domainQuality {
+                score
+                length
+                brandability
+                memorability
+              }
+            }
+            recommendations {
+              loanTerms
+              stakingTerms
+              riskFactors
+            }
+            metadata
+          }
+        }
+      `;
+
+      const response = await fetch('https://api-testnet.doma.xyz/graphql', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${userApiKey}`,
+          'x-doma-api-key': userApiKey
+        },
+        body: JSON.stringify({ 
+          query,
+          variables: { domainName: domain }
+        })
+      });
+
+      if (!response.ok) {
+        console.log(`[Analytics] GraphQL API failed with status ${response.status}`);
+        return null;
+      }
+
+      const result = await response.json();
+      
+      // Handle GraphQL errors
+      if (result.errors) {
+        console.log('[Analytics] GraphQL errors:', result.errors);
+        return null;
+      }
+      
+      const data = result.data?.analyzeDomain;
+      
+      if (!data || !data.success) {
+        console.log('[Analytics] GraphQL returned unsuccessful result');
+        return null;
+      }
+
+      console.log('[Analytics] Successfully received GraphQL API data');
+      return data as AnalysisResult;
+    } catch (err: any) {
+      console.log('[Analytics] GraphQL API Error:', err.message);
+      return null;
+    }
+  };
+
+  // Try REST API as fallback
+  const tryRESTAPI = async (domain: string, userApiKey: string): Promise<AnalysisResult | null> => {
+    try {
+      console.log('[Analytics] Trying REST API fallback...');
+      
+      const response = await fetch('/api/analyze', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-doma-api-key': userApiKey,
+          'Authorization': `Bearer ${userApiKey}`
+        },
+        body: JSON.stringify({ 
+          domainName: domain,
+          apiKey: userApiKey
+        })
+      });
+
+      if (!response.ok) {
+        console.log(`[Analytics] REST API failed with status ${response.status}`);
+        return null;
+      }
+
+      const data: AnalysisResult = await response.json();
+      
+      if (!data.success) {
+        console.log('[Analytics] REST API returned unsuccessful result');
+        return null;
+      }
+
+      console.log('[Analytics] Successfully received REST API data');
+      return data;
+    } catch (err: any) {
+      console.log('[Analytics] REST API Error:', err.message);
+      return null;
+    }
+  };
+
+  // Main API call function with dual approach and fallback
   const analyzeWithAPI = async (domain: string, userApiKey?: string) => {
     try {
       setError('');
@@ -302,37 +437,30 @@ const Analytics: React.FC = () => {
         return generateMockData(domain);
       }
 
-      console.log('[Analytics] Making API request with key');
-      const response = await fetch('/api/analyze', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'x-doma-api-key': userApiKey
-        },
-        body: JSON.stringify({ 
-          domainName: domain,
-          apiKey: userApiKey
-        })
-      });
-
-      if (!response.ok) {
-        // If API fails, fall back to mock data
-        console.log(`[Analytics] API request failed (${response.status}), using mock data`);
-        return generateMockData(domain);
-      }
-
-      const data: AnalysisResult = await response.json();
+      console.log('[Analytics] Making API requests with key');
       
-      if (!data.success) {
-        console.log('[Analytics] API returned unsuccessful result, using mock data');
+      // Try GraphQL API first
+      let result = await tryGraphQLAPI(domain, userApiKey);
+      
+      // If GraphQL fails, try REST API
+      if (!result) {
+        console.log('[Analytics] GraphQL failed, trying REST API...');
+        result = await tryRESTAPI(domain, userApiKey);
+      }
+      
+      // If both APIs fail, use mock data
+      if (!result) {
+        console.log('[Analytics] Both APIs failed, using mock data');
+        setError('API key may be invalid or service temporarily unavailable. Showing mock data.');
         return generateMockData(domain);
       }
 
-      console.log('[Analytics] Successfully received API data');
-      return data;
+      // Clear any previous errors on success
+      setError('');
+      return result;
     } catch (err: any) {
-      console.warn('[Analytics] API Error, falling back to mock data:', err.message);
-      // Always fall back to mock data on error
+      console.warn('[Analytics] Unexpected error, falling back to mock data:', err.message);
+      setError('Unexpected error occurred. Showing mock data.');
       return generateMockData(domain);
     }
   };
@@ -496,7 +624,7 @@ const Analytics: React.FC = () => {
           
           {!apiKey && (
             <div className="text-yellow-400 font-jetbrains text-xs bg-yellow-400/10 px-3 py-2 rounded border border-yellow-400/20">
-              No API key: Using mock fallback data
+              No API key: Cannot fetch the on-chain token and name data for analysis 
             </div>
           )}
         </div>

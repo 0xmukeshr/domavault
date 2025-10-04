@@ -262,35 +262,28 @@ const Dashboard: React.FC<DashboardProps> = ({ onCreateVault, onMintOption }) =>
         </div>
       </div>
 
-      {/* Metrics */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        {metrics.map((metric, index) => (
-          <MetricCard key={index} {...metric} />
-        ))}
-      </div>
-
-      {/* Charts Section */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        <div className="bg-gray-900 border border-gray-700 rounded-lg p-6">
-          <h2 className="text-xl font-space-mono font-bold text-white mb-6 tracking-wide">Portfolio Performance</h2>
-          <PortfolioChart />
+      {/* Metrics - Only show when vaults exist */}
+      {vaults.length > 0 && (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          {metrics.map((metric, index) => (
+            <MetricCard key={index} {...metric} />
+          ))}
         </div>
-        <div className="bg-gray-900 border border-gray-700 rounded-lg p-6">
-          <h2 className="text-xl font-space-mono font-bold text-white mb-6 tracking-wide">Yield Analytics</h2>
-          <YieldChart />
-        </div>
-      </div>
+      )}
 
-      {/* Create Vault Button */}
-      <div className="flex justify-center py-6">
-        <button
-          onClick={onCreateVault}
-          className="flex items-center space-x-3 px-8 py-4 bg-gray-900 border border-neon-green rounded-lg text-white font-space-mono font-medium transition-all duration-200 hover:bg-gray-800 hover:shadow-lg hover:shadow-neon-green/20 hover:scale-[1.02]"
-        >
-          <HiOutlinePlusCircle size={24} />
-          <span className="text-lg">Create New Vault</span>
-        </button>
-      </div>
+      {/* Charts Section - Only show when vaults exist */}
+      {vaults.length > 0 && (
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+          <div className="bg-gray-900 border border-gray-700 rounded-lg p-6">
+            <h2 className="text-xl font-space-mono font-bold text-white mb-6 tracking-wide">Portfolio Performance</h2>
+            <PortfolioChart vaultData={vaults} hasVaults={vaults.length > 0} />
+          </div>
+          <div className="bg-gray-900 border border-gray-700 rounded-lg p-6">
+            <h2 className="text-xl font-space-mono font-bold text-white mb-6 tracking-wide">Yield Analytics</h2>
+            <YieldChart />
+          </div>
+        </div>
+      )}
 
       {/* Vault Cards */}
       {vaults.length === 0 ? (
@@ -299,13 +292,26 @@ const Dashboard: React.FC<DashboardProps> = ({ onCreateVault, onMintOption }) =>
           <div className="text-gray-500 text-sm mb-6">Create your first vault to start earning yield on your domain assets</div>
           <button
             onClick={onCreateVault}
-            className="px-6 py-3 bg-gradient-to-r from-green-600 to-green-700 rounded-lg text-white font-jetbrains font-medium transition-all duration-200 hover:from-green-700 hover:to-green-800"
+            className="flex items-center space-x-3 px-8 py-4 bg-gray-900 border border-neon-green rounded-lg text-white font-space-mono font-medium transition-all duration-200 hover:bg-gray-800 hover:shadow-lg hover:shadow-neon-green/20 hover:scale-[1.02] mx-auto"
           >
-            Create First Vault
+            <HiOutlinePlusCircle size={24} />
+            <span className="text-lg">Create First Vault</span>
           </button>
         </div>
       ) : (
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <>
+          {/* Create New Vault Button - Only show when vaults exist */}
+          <div className="flex justify-center py-6">
+            <button
+              onClick={onCreateVault}
+              className="flex items-center space-x-3 px-8 py-4 bg-gray-900 border border-neon-green rounded-lg text-white font-space-mono font-medium transition-all duration-200 hover:bg-gray-800 hover:shadow-lg hover:shadow-neon-green/20 hover:scale-[1.02]"
+            >
+              <HiOutlinePlusCircle size={24} />
+              <span className="text-lg">Create New Vault</span>
+            </button>
+          </div>
+          
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {vaults.map((vault) => {
             const collateralValue = parseFloat(vault.collateralValue);
             const borrowedAmount = parseFloat(vault.borrowedAmount);
@@ -347,7 +353,8 @@ const Dashboard: React.FC<DashboardProps> = ({ onCreateVault, onMintOption }) =>
               />
             );
           })}
-        </div>
+          </div>
+        </>
       )}
     </div>
   );

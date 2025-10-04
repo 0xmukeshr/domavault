@@ -1,20 +1,39 @@
 import React, { useState, useEffect } from 'react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 
-const PortfolioChart: React.FC = () => {
+interface PortfolioChartProps {
+  vaultData?: any[];
+  hasVaults?: boolean;
+}
+
+const PortfolioChart: React.FC<PortfolioChartProps> = ({ vaultData, hasVaults = false }) => {
   const [data, setData] = useState<any[]>([]);
   const [timeframe, setTimeframe] = useState('7d');
 
   useEffect(() => {
-    // Generate realistic portfolio data
+    // Only generate data if user has vaults
+    if (!hasVaults) {
+      setData([]);
+      return;
+    }
+
+    // Generate realistic portfolio data based on actual vault data
     const generateData = () => {
-      const baseValue = 125430;
+      // Calculate base value from actual vaults or use 0
+      const baseValue = vaultData && vaultData.length > 0 
+        ? vaultData.reduce((sum, vault) => sum + parseFloat(vault.collateralValue || '0'), 0)
+        : 0;
+        
+      if (baseValue === 0) {
+        return [];
+      }
+
       const points = timeframe === '24h' ? 24 : timeframe === '7d' ? 7 : 30;
       const newData = [];
 
       for (let i = 0; i < points; i++) {
-        const variance = (Math.random() - 0.5) * 0.1; // ±5% variance
-        const trend = i * 0.002; // Slight upward trend
+        const variance = (Math.random() - 0.5) * 0.05; // ±2.5% variance (more realistic)
+        const trend = i * 0.001; // Slight upward trend
         const value = baseValue * (1 + trend + variance);
         
         let label;
@@ -38,13 +57,15 @@ const PortfolioChart: React.FC = () => {
 
     setData(generateData());
     
-    // Update data every 5 seconds for real-time effect
+    // Update data every 30 seconds for real-time effect (less frequent when based on real data)
     const interval = setInterval(() => {
-      setData(generateData());
-    }, 5000);
+      if (hasVaults) {
+        setData(generateData());
+      }
+    }, 30000);
 
     return () => clearInterval(interval);
-  }, [timeframe]);
+  }, [timeframe, vaultData, hasVaults]);
 
   const CustomTooltip = ({ active, payload, label }: any) => {
     if (active && payload && payload.length) {
@@ -62,6 +83,18 @@ const PortfolioChart: React.FC = () => {
     }
     return null;
   };
+
+  // Show empty state if no vaults exist
+  if (!hasVaults || data.length === 0) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="text-center">
+          <div className="text-gray-500 text-lg font-space-mono mb-2">No Portfolio Data</div>
+          <div className="text-gray-400 text-sm font-jetbrains">Create a vault to view your portfolio performance</div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div>
