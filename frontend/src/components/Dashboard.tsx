@@ -106,17 +106,23 @@ const Dashboard: React.FC<DashboardProps> = ({ onCreateVault, onMintOption }) =>
   };
 
   const calculateMetrics = () => {
-    const totalVaultValue = vaults.reduce((sum, vault) => sum + parseFloat(vault.collateralValue), 0);
-    const totalBorrowed = vaults.reduce((sum, vault) => sum + parseFloat(vault.borrowedAmount), 0);
-    const totalInterest = vaults.reduce((sum, vault) => sum + parseFloat(vault.interestAccrued), 0);
+    const totalVaultValue = vaults.reduce((sum, vault) => {
+      const value = parseFloat(vault.collateralValue) || 0;
+      console.log('[Dashboard] Vault collateral value:', vault.vaultId, value);
+      return sum + value;
+    }, 0);
+    const totalBorrowed = vaults.reduce((sum, vault) => sum + (parseFloat(vault.borrowedAmount) || 0), 0);
+    const totalInterest = vaults.reduce((sum, vault) => sum + (parseFloat(vault.interestAccrued) || 0), 0);
     const averageLTV = vaults.length > 0 
-      ? vaults.reduce((sum, vault) => sum + parseFloat(vault.currentLTV), 0) / vaults.length 
+      ? vaults.reduce((sum, vault) => sum + (parseFloat(vault.currentLTV) || 0), 0) / vaults.length 
       : 0;
+
+    console.log('[Dashboard] Calculated metrics:', { totalVaultValue, totalBorrowed, totalInterest, averageLTV });
 
     return [
       { 
         label: 'Total Vault Value', 
-        value: `$${totalVaultValue.toLocaleString()}`, 
+        value: `$${totalVaultValue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`, 
         change: '+0%', 
         positive: true 
       },
@@ -128,7 +134,7 @@ const Dashboard: React.FC<DashboardProps> = ({ onCreateVault, onMintOption }) =>
       },
       { 
         label: 'Total Borrowed', 
-        value: `$${totalBorrowed.toLocaleString()}`, 
+        value: `$${totalBorrowed.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`, 
         change: '+0%', 
         positive: true 
       },

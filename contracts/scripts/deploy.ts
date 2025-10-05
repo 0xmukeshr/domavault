@@ -69,9 +69,9 @@ async function main() {
 
   // Set some initial domain values
   console.log("✅ Setting initial domain values...");
-  await valuator.updateDomainValue(1, ethers.parseEther("5000"), 85);
-  await valuator.updateDomainValue(2, ethers.parseEther("3000"), 75);
-  await valuator.updateDomainValue(3, ethers.parseEther("10000"), 95);
+  await valuator.updateDomainValue(1, ethers.parseUnits("5000", 6), 85);  // $5,000 with 6 decimals
+  await valuator.updateDomainValue(2, ethers.parseUnits("3000", 6), 75);  // $3,000 with 6 decimals
+  await valuator.updateDomainValue(3, ethers.parseUnits("10000", 6), 95); // $10,000 with 6 decimals
 
   // Summary
   console.log("\n" + "=".repeat(70));

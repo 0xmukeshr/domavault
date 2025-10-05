@@ -346,6 +346,11 @@ const CreateVaultModal: React.FC<CreateVaultModalProps> = ({ onClose }) => {
       return;
     }
 
+    if (!stakeAmount || parseFloat(stakeAmount) <= 0) {
+      setError('Please enter a valid stake amount');
+      return;
+    }
+
     const selectedNFTData = nfts.find(nft => nft.id === selectedNFT);
     if (!selectedNFTData) {
       setError('Selected NFT not found');
@@ -358,14 +363,21 @@ const CreateVaultModal: React.FC<CreateVaultModalProps> = ({ onClose }) => {
     try {
       console.log('[CreateVaultModal] Creating vault:', {
         tokenId: selectedNFT,
-        domainName: selectedNFTData.name
+        domainName: selectedNFTData.name,
+        initialValue: stakeAmount
       });
       
-      const txHash = await contractService.createVault(selectedNFT, selectedNFTData.name);
+      const txHash = await contractService.createVault(selectedNFT, selectedNFTData.name, stakeAmount);
       console.log('[CreateVaultModal] Vault creation transaction hash:', txHash);
       
       console.log('[CreateVaultModal] Vault created successfully!');
-      onClose();
+      
+      // Show success message briefly before closing
+      setTimeout(() => {
+        onClose();
+        // Optionally trigger a refresh of the dashboard
+        window.location.reload();
+      }, 1500);
     } catch (err) {
       console.error('[CreateVaultModal] Error creating vault:', err);
       setError(err instanceof Error ? err.message : 'Failed to create vault');

@@ -1,0 +1,96 @@
+🎉 DEPLOYMENT SUCCESSFUL - DomaVault with Fixed createVault Function
+======================================================================
+Deployed: 2025-10-05T06:32:17Z
+Network: Doma Testnet (Chain ID: 97476)
+Deployer: 0x322c3B965EcBbbf42D93b81C372d736576290583
+
+NEW CONTRACT ADDRESSES (WITH FIXES):
+======================================================================
+DomaVault:           0x6F9007139E0b265b2434d84a49F9Ca8483C86b11 ✅ UPDATED
+DomainValuator:      0x37A92A357A7c3874E91ebE5d871982BBF6E15c5B
+Mock USDC:           0xa97dC39dAD2aAab87CEe03C2Eb516E502BCD6367
+Mock Domain NFT:     0x01028F7A4170e58dffBBF8750DdFF9B6563eE95B
+
+🔗 Explorer Links:
+======================================================================
+DomaVault Contract:
+https://explorer-testnet.doma.xyz/address/0x6F9007139E0b265b2434d84a49F9Ca8483C86b11
+
+DomainValuator:
+https://explorer-testnet.doma.xyz/address/0x37A92A357A7c3874E91ebE5d871982BBF6E15c5B
+
+MockUSDC:
+https://explorer-testnet.doma.xyz/address/0xa97dC39dAD2aAab87CEe03C2Eb516E502BCD6367
+
+MockDomainNFT:
+https://explorer-testnet.doma.xyz/address/0x01028F7A4170e58dffBBF8750DdFF9B6563eE95B
+
+Deployer Wallet:
+https://explorer-testnet.doma.xyz/address/0x322c3B965EcBbbf42D93b81C372d736576290583
+
+📦 What Was Deployed:
+======================================================================
+✅ DomaVault with FIXED createVault function (accepts initialValue)
+✅ DomainValuator for AI domain scoring
+✅ MockUSDC (100k USDC funded to vault)
+✅ MockDomainNFT with 3 test NFTs minted (IDs: 1, 2, 3)
+
+📊 Initial Domain Values Set:
+======================================================================
+Token ID 1: $5,000  (AI Score: 85/100)
+Token ID 2: $3,000  (AI Score: 75/100)
+Token ID 3: $10,000 (AI Score: 95/100)
+
+🔐 Test NFTs Owned By:
+======================================================================
+Wallet: 0x322c3B965EcBbbf42D93b81C372d736576290583
+NFTs: Token IDs 1, 2, 3
+
+✅ FRONTEND CONFIGURATION UPDATED:
+======================================================================
+File: /home/toji/doma/project/frontend/.env.local
+
+The frontend is already configured with these new addresses!
+
+🚀 NEXT STEPS:
+======================================================================
+1. Start frontend dev server:
+   cd /home/toji/doma/project/frontend
+   npm run dev
+
+2. Connect with wallet: 0x322c3B965EcBbbf42D93b81C372d736576290583
+
+3. Test vault creation:
+   - Click "Create New Vault"
+   - Select one of your 3 NFTs
+   - Enter amount (e.g., 20 for $20)
+   - Confirm transaction
+   - Vault will be created with your specified amount!
+
+4. Test borrowing:
+   - View your vault in dashboard
+   - Click "Borrow"
+   - Borrow up to 70% of vault value
+   - Receive USDC in wallet
+
+🎯 KEY FIX:
+======================================================================
+The NEW DomaVault contract (0x6F9...86b11) NOW accepts the initialValue
+parameter in createVault(), so the amount you enter in the UI will be
+used as the vault's collateral value!
+
+OLD: createVault(tokenId, name) - Amount ignored ❌
+NEW: createVault(tokenId, name, initialValue) - Amount used! ✅
+
+💡 TESTING TIP:
+======================================================================
+When creating vault, enter a reasonable amount like:
+- 20 (for $20)
+- 100 (for $100)
+- 1000 (for $1000)
+
+The contract will use this as your collateral value, allowing you to
+borrow up to 70% of this amount in USDC.
+
+🎉 DEPLOYMENT COMPLETE!
+======================================================================

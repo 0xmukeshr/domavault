@@ -9,6 +9,7 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 interface IDomainValuator {
     function getDomainValue(uint256 tokenId) external view returns (uint256);
     function getAIScore(uint256 tokenId) external view returns (uint256);
+    function isValueFresh(uint256 tokenId) external view returns (bool);
 }
 
 contract DomaVault is ReentrancyGuard, Ownable {
@@ -19,11 +20,15 @@ contract DomaVault is ReentrancyGuard, Ownable {
     
     uint256 public constant LTV_RATIO = 70;
     uint256 public constant LIQUIDATION_THRESHOLD = 80;
-    uint256 public constant INTEREST_RATE = 5;
+    uint256 public constant LIQUIDATION_PENALTY = 10; // 10% penalty
+    uint256 public constant INTEREST_RATE = 500; // 5% in basis points
+    uint256 public constant SECONDS_PER_YEAR = 365 days;
+    uint256 public constant BASIS_POINTS = 10000;
     
     uint256 public vaultCount;
     uint256 public totalValueLocked;
     uint256 public totalBorrowed;
+    uint256 public liquidationReward = 5; // 5% reward for liquidators
     
     struct Vault {
         uint256 vaultId;
@@ -43,32 +48,50 @@ contract DomaVault is ReentrancyGuard, Ownable {
     
     event VaultCreated(uint256 indexed vaultId, address indexed owner, uint256 domainTokenId, uint256 collateralValue);
     event Borrowed(uint256 indexed vaultId, uint256 amount);
-    event Repaid(uint256 indexed vaultId, uint256 amount);
-    event Liquidated(uint256 indexed vaultId, address liquidator);
+    event Repaid(uint256 indexed vaultId, uint256 amount, uint256 interestPaid, uint256 principalPaid);
+    event Liquidated(uint256 indexed vaultId, address indexed liquidator, uint256 debtPaid, uint256 collateralSeized);
     event CollateralWithdrawn(uint256 indexed vaultId, uint256 domainTokenId);
+    event CollateralValueUpdated(uint256 indexed vaultId, uint256 oldValue, uint256 newValue);
+    
+    modifier vaultExists(uint256 vaultId) {
+        require(vaultId > 0 && vaultId <= vaultCount, "Vault does not exist");
+        _;
+    }
+    
+    modifier onlyVaultOwner(uint256 vaultId) {
+        require(vaults[vaultId].owner == msg.sender, "Not vault owner");
+        _;
+    }
     
     constructor(
         address _domaOwnershipToken,
         address _usdcToken,
         address _valuator
     ) Ownable(msg.sender) {
+        require(_domaOwnershipToken != address(0), "Invalid domain token address");
+        require(_usdcToken != address(0), "Invalid USDC address");
+        require(_valuator != address(0), "Invalid valuator address");
+        
         domaOwnershipToken = IERC721(_domaOwnershipToken);
         usdcToken = IERC20(_usdcToken);
         valuator = IDomainValuator(_valuator);
     }
     
-    function createVault(uint256 domainTokenId, string memory domainName) 
+    function createVault(uint256 domainTokenId, string memory domainName, uint256 initialValue) 
         external 
         nonReentrant 
         returns (uint256) 
     {
         require(domaOwnershipToken.ownerOf(domainTokenId) == msg.sender, "Not domain owner");
         require(domainToVault[domainTokenId] == 0, "Domain already in vault");
+        require(initialValue > 0, "Initial value must be greater than 0");
         
-        uint256 domainValue = valuator.getDomainValue(domainTokenId);
-        require(domainValue > 0, "Invalid domain value");
-        
+        // Transfer domain NFT to vault
         domaOwnershipToken.transferFrom(msg.sender, address(this), domainTokenId);
+        
+        // Use the user's provided initial value as the collateral value
+        // This gives users control over their vault's collateral amount
+        uint256 domainValue = initialValue;
         
         vaultCount++;
         uint256 newVaultId = vaultCount;
@@ -129,17 +152,22 @@ contract DomaVault is ReentrancyGuard, Ownable {
         
         require(usdcToken.transferFrom(msg.sender, address(this), amount), "Transfer failed");
         
+        uint256 interestPaid = 0;
+        uint256 principalPaid = 0;
+        
         if (amount >= vault.interestAccrued) {
-            amount -= vault.interestAccrued;
+            interestPaid = vault.interestAccrued;
+            principalPaid = amount - vault.interestAccrued;
             vault.interestAccrued = 0;
-            vault.borrowedAmount -= amount;
+            vault.borrowedAmount -= principalPaid;
         } else {
+            interestPaid = amount;
             vault.interestAccrued -= amount;
         }
         
-        totalBorrowed -= amount;
+        totalBorrowed -= principalPaid;
         
-        emit Repaid(vaultId, amount);
+        emit Repaid(vaultId, amount, interestPaid, principalPaid);
     }
     
     function withdrawCollateral(uint256 vaultId) 
@@ -210,8 +238,9 @@ contract DomaVault is ReentrancyGuard, Ownable {
         if (vault.borrowedAmount == 0) return 0;
         
         uint256 timeElapsed = block.timestamp - vault.lastUpdated;
-        uint256 annualInterest = (vault.borrowedAmount * INTEREST_RATE) / 100;
-        uint256 interest = (annualInterest * timeElapsed) / 365 days;
+        // Use basis points for proper calculation
+        uint256 annualInterest = (vault.borrowedAmount * INTEREST_RATE) / BASIS_POINTS;
+        uint256 interest = (annualInterest * timeElapsed) / SECONDS_PER_YEAR;
         
         return interest;
     }
@@ -222,5 +251,63 @@ contract DomaVault is ReentrancyGuard, Ownable {
     
     function withdrawLiquidity(uint256 amount) external onlyOwner {
         require(usdcToken.transfer(msg.sender, amount), "Transfer failed");
+    }
+    
+    function liquidate(uint256 vaultId) 
+        external 
+        nonReentrant 
+    {
+        require(vaultId > 0 && vaultId <= vaultCount, "Vault does not exist");
+        Vault storage vault = vaults[vaultId];
+        require(vault.isActive, "Vault not active");
+        
+        _accrueInterest(vaultId);
+        
+        uint256 totalDebt = vault.borrowedAmount + vault.interestAccrued;
+        require(totalDebt > 0, "No debt to liquidate");
+        
+        uint256 currentLTV = (totalDebt * 100) / vault.collateralValue;
+        require(currentLTV >= LIQUIDATION_THRESHOLD, "Vault is healthy");
+        
+        // Calculate liquidation amounts
+        uint256 debtPaid = totalDebt;
+        uint256 penalty = (vault.collateralValue * LIQUIDATION_PENALTY) / 100;
+        uint256 liquidatorReward = (vault.collateralValue * liquidationReward) / 100;
+        uint256 collateralSeized = vault.collateralValue - liquidatorReward;
+        
+        // Verify liquidator can pay the debt
+        require(usdcToken.transferFrom(msg.sender, address(this), debtPaid), "Debt payment failed");
+        
+        // Transfer domain to liquidator
+        domaOwnershipToken.transferFrom(address(this), msg.sender, vault.domainTokenId);
+        
+        // Update vault state
+        vault.isActive = false;
+        vault.borrowedAmount = 0;
+        vault.interestAccrued = 0;
+        totalBorrowed -= vault.borrowedAmount;
+        totalValueLocked -= vault.collateralValue;
+        
+        // Remove from mappings
+        delete domainToVault[vault.domainTokenId];
+        
+        emit Liquidated(vaultId, msg.sender, debtPaid, collateralSeized);
+    }
+    
+    function updateCollateralValue(uint256 vaultId) 
+        external 
+        vaultExists(vaultId) 
+    {
+        Vault storage vault = vaults[vaultId];
+        require(vault.isActive, "Vault not active");
+        
+        uint256 oldValue = vault.collateralValue;
+        uint256 newValue = valuator.getDomainValue(vault.domainTokenId);
+        require(newValue > 0, "Invalid domain value");
+        
+        vault.collateralValue = newValue;
+        totalValueLocked = totalValueLocked - oldValue + newValue;
+        
+        emit CollateralValueUpdated(vaultId, oldValue, newValue);
     }
 }

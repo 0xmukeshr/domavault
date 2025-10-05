@@ -1,6 +1,8 @@
 import React from 'react';
 
 const Leaderboard: React.FC = () => {
+  // Mock data for demonstration purposes
+
 
   const allRankings = [
     { rank: 1, domain: 'premium.eth', owner: 'DeFiMaster', score: 96, value: 145000, yield: 19.2, generated: 15200, badges: ['Gold Vault', 'AI Champion'] },

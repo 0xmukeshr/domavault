@@ -17,10 +17,10 @@ async function main() {
   }
 
   // Use already deployed contracts
-  const usdcAddress = "0x776d33C893495878c1824e01369EaA3683671492";
-  const valuatorAddress = "0x2cee13891EcAA7d6E6B243A5C1A647AA5cCf373d";
-  const domainNFTAddress = "0x465a804C963f7f0b75f4209f8584f12C3f627A73";
-  const vaultAddress = "0x538e5b582268c4a88040798d8001234C547CB3ff";
+  const usdcAddress = "0x4c52Fc85786C970304f75140250812414ca58c9F";
+  const valuatorAddress = "0x298be536e9774cF0deeE05AA031B184f5FF41124";
+  const domainNFTAddress = "0x49C89D3BBB8B90D790679fAb73E3B6222CD59cE8";
+  const vaultAddress = "0xb721AB9a9faD54DF8ec5c00E75948Ab007B27984";
 
   console.log("Using deployed contracts:");
   console.log("Mock USDC:          ", usdcAddress);
@@ -71,9 +71,9 @@ async function main() {
 
     // Set some initial domain values
     console.log("📊 Setting initial domain values...");
-    await valuator.updateDomainValue(1, ethers.parseEther("5000"), 85);
-    await valuator.updateDomainValue(2, ethers.parseEther("3000"), 75);
-    await valuator.updateDomainValue(3, ethers.parseEther("10000"), 95);
+    await valuator.updateDomainValue(1, ethers.parseUnits("5000", 6), 85);  // $5,000 with 6 decimals
+    await valuator.updateDomainValue(2, ethers.parseUnits("3000", 6), 75);  // $3,000 with 6 decimals
+    await valuator.updateDomainValue(3, ethers.parseUnits("10000", 6), 95); // $10,000 with 6 decimals
     console.log("✅ Updated domain values");
 
     // Summary

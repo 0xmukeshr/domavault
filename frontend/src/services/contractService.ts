@@ -2,7 +2,7 @@ import { ethers } from 'ethers';
 
 // Contract ABIs
 const VAULT_ABI = [
-  "function createVault(uint256 domainTokenId, string domainName) external returns (uint256)",
+  "function createVault(uint256 domainTokenId, string domainName, uint256 initialValue) external returns (uint256)",
   "function borrow(uint256 vaultId, uint256 amount) external",
   "function repay(uint256 vaultId, uint256 amount) external",
   "function getVaultDetails(uint256 vaultId) external view returns (tuple(uint256 vaultId, address owner, uint256 domainTokenId, uint256 collateralValue, uint256 borrowedAmount, uint256 lastUpdated, uint256 interestAccrued, bool isActive, string domainName))",
@@ -140,10 +140,10 @@ export class ContractService {
               vaultId: id.toString(),
               owner: details.owner,
               domainTokenId: details.domainTokenId.toString(),
-              collateralValue: ethers.formatUnits(details.collateralValue),
-              borrowedAmount: ethers.formatUnits(details.borrowedAmount),
+              collateralValue: ethers.formatUnits(details.collateralValue, 6),
+              borrowedAmount: ethers.formatUnits(details.borrowedAmount, 6),
               lastUpdated: details.lastUpdated.toString(),
-              interestAccrued: ethers.formatUnits(details.interestAccrued),
+              interestAccrued: ethers.formatUnits(details.interestAccrued, 6),
               isActive: details.isActive,
               domainName: details.domainName,
               currentLTV: health.currentLTV.toString(),
@@ -166,9 +166,9 @@ export class ContractService {
     }
   }
 
-  async createVault(domainTokenId: string, domainName: string): Promise<string> {
+  async createVault(domainTokenId: string, domainName: string, initialValue: string): Promise<string> {
     try {
-      console.log('[ContractService] Creating vault for domain:', { domainTokenId, domainName });
+      console.log('[ContractService] Creating vault for domain:', { domainTokenId, domainName, initialValue });
       
       if (!this.vaultContract || !this.nftContract) {
         throw new Error('Contracts not initialized');
@@ -176,6 +176,10 @@ export class ContractService {
 
       const userAddress = await this.signer?.getAddress();
       console.log('[ContractService] User address:', userAddress);
+
+      // Convert initial value to wei (USDC has 6 decimals)
+      const initialValueWei = ethers.parseUnits(initialValue, 6);
+      console.log('[ContractService] Initial value in wei:', initialValueWei.toString());
 
       // Check if NFT is approved
       const isApproved = await this.nftContract.isApprovedForAll(userAddress, CONTRACTS.vault);
@@ -189,7 +193,7 @@ export class ContractService {
       }
       
       console.log('[ContractService] Creating vault...');
-      const tx = await this.vaultContract.createVault(domainTokenId, domainName);
+      const tx = await this.vaultContract.createVault(domainTokenId, domainName, initialValueWei);
       const receipt = await tx.wait();
       
       console.log('[ContractService] Vault creation transaction:', receipt);
