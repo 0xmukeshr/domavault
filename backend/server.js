@@ -10,8 +10,57 @@ require('dotenv').config();
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+// Render.com IP addresses for whitelisting
+const RENDER_IPS = [
+  '44.226.145.213',
+  '54.187.200.255',
+  '34.213.214.55',
+  '35.164.95.156',
+  '44.230.95.183',
+  '44.229.200.200',
+  '74.220.48.0/24',
+  '74.220.56.0/24'
+];
+
+// CORS configuration for production
+const corsOptions = {
+  origin: function (origin, callback) {
+    // Allow requests with no origin (like mobile apps or curl requests)
+    if (!origin) return callback(null, true);
+    
+    // Allow all origins in development
+    if (process.env.NODE_ENV !== 'production') {
+      return callback(null, true);
+    }
+    
+    // In production, allow specific origins
+    const allowedOrigins = [
+      process.env.FRONTEND_URL,
+      'https://domayield.onrender.com',
+      /\.onrender\.com$/,
+      /localhost/,
+    ].filter(Boolean);
+    
+    const isAllowed = allowedOrigins.some(pattern => {
+      if (typeof pattern === 'string') {
+        return origin === pattern;
+      }
+      return pattern.test(origin);
+    });
+    
+    if (isAllowed) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'x-doma-api-key']
+};
+
 // Middleware
-app.use(cors());
+app.use(cors(corsOptions));
 app.use(express.json());
 
 // Rate limiting (configurable via env)

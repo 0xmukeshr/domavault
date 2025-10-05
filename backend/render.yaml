@@ -1,0 +1,26 @@
+services:
+  # Backend API Service
+  - type: web
+    name: domayield-api
+    env: node
+    region: oregon
+    plan: starter
+    buildCommand: npm install
+    startCommand: npm start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 3000
+      - key: DOMA_API_ENDPOINT
+        value: https://api-testnet.doma.xyz/graphql
+      - key: DOMA_API_KEY
+        sync: false
+      - key: RATE_LIMIT_WINDOW_MS
+        value: 60000
+      - key: RATE_LIMIT_MAX_REQUESTS
+        value: 100
+      - key: ETH_USD_PRICE
+        value: 2800
+    healthCheckPath: /api/health
+    autoDeploy: true

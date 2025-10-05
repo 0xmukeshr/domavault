@@ -1,0 +1,8 @@
+NODE_ENV=production
+PORT=3000
+DOMA_API_ENDPOINT=https://api-testnet.doma.xyz/graphql
+DOMA_API_KEY=
+FRONTEND_URL=https://domavault-1.onrender.com
+RATE_LIMIT_WINDOW_MS=60000
+RATE_LIMIT_MAX_REQUESTS=100
+ETH_USD_PRICE=2800
