@@ -28,6 +28,8 @@ const Dashboard: React.FC<DashboardProps> = ({ onCreateVault, onMintOption }) =>
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [usdcBalance, setUsdcBalance] = useState('0');
+  const [mintingUsdc, setMintingUsdc] = useState(false);
+  const [mintingNft, setMintingNft] = useState(false);
 
   // Initialize contract service and load data
   useEffect(() => {
@@ -240,6 +242,48 @@ const Dashboard: React.FC<DashboardProps> = ({ onCreateVault, onMintOption }) =>
     }
   };
 
+  const handleMintUsdc = async () => {
+    setMintingUsdc(true);
+    setError(null);
+    
+    try {
+      console.log('[Dashboard] Minting USDC...');
+      const txHash = await contractService.mintUSDC('10000'); // Mint 10,000 USDC
+      console.log('[Dashboard] USDC mint transaction hash:', txHash);
+      
+      // Reload balance after successful mint
+      await loadUserBalance();
+      
+      console.log('[Dashboard] USDC minted successfully');
+    } catch (err) {
+      console.error('[Dashboard] Error minting USDC:', err);
+      setError(err instanceof Error ? err.message : 'Failed to mint USDC');
+    } finally {
+      setMintingUsdc(false);
+    }
+  };
+
+  const handleMintNft = async () => {
+    setMintingNft(true);
+    setError(null);
+    
+    try {
+      console.log('[Dashboard] Minting NFT...');
+      const txHash = await contractService.mintMockNFT();
+      console.log('[Dashboard] NFT mint transaction hash:', txHash);
+      
+      // Reload vaults data to potentially show new NFTs
+      await loadUserVaults();
+      
+      console.log('[Dashboard] NFT minted successfully');
+    } catch (err) {
+      console.error('[Dashboard] Error minting NFT:', err);
+      setError(err instanceof Error ? err.message : 'Failed to mint NFT');
+    } finally {
+      setMintingNft(false);
+    }
+  };
+
   return (
     <div className="space-y-8">
       {/* Header */}
@@ -252,9 +296,28 @@ const Dashboard: React.FC<DashboardProps> = ({ onCreateVault, onMintOption }) =>
           <div className="text-sm font-jetbrains uppercase tracking-wide text-gray-400 mb-1">
             Connected: {address?.slice(0, 6)}...{address?.slice(-4)}
           </div>
-          <div className="text-xs text-gray-500">
+          <div className="text-xs text-gray-500 mb-3">
             USDC Balance: ${parseFloat(usdcBalance).toLocaleString()}
           </div>
+          
+          {/* Utility Buttons */}
+          <div className="flex space-x-2 mb-2">
+            <button
+              onClick={handleMintUsdc}
+              disabled={mintingUsdc || loading || !isConnected}
+              className="px-3 py-1 text-xs bg-green-600 hover:bg-green-700 disabled:bg-gray-600 disabled:cursor-not-allowed text-white rounded transition-colors duration-200 font-jetbrains"
+            >
+              {mintingUsdc ? 'Minting...' : 'Add 10K USDC'}
+            </button>
+            <button
+              onClick={handleMintNft}
+              disabled={mintingNft || loading || !isConnected}
+              className="px-3 py-1 text-xs bg-blue-600 hover:bg-blue-700 disabled:bg-gray-600 disabled:cursor-not-allowed text-white rounded transition-colors duration-200 font-jetbrains"
+            >
+              {mintingNft ? 'Minting...' : 'Add Mock NFT'}
+            </button>
+          </div>
+          
           {loading && (
             <div className="text-xs text-blue-400 animate-pulse">
               Loading...

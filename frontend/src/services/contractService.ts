@@ -40,7 +40,8 @@ const USDC_ABI = [
   "function allowance(address owner, address spender) external view returns (uint256)",
   "function balanceOf(address account) external view returns (uint256)",
   "function transfer(address to, uint256 amount) external returns (bool)",
-  "function transferFrom(address from, address to, uint256 amount) external returns (bool)"
+  "function transferFrom(address from, address to, uint256 amount) external returns (bool)",
+  "function mint(address to, uint256 amount) external"
 ];
 
 // Contract addresses from environment
@@ -358,6 +359,55 @@ export class ContractService {
       return ethers.formatUnits(balance, 6);
     } catch (error) {
       console.error('[ContractService] Error getting USDC balance:', error);
+      throw error;
+    }
+  }
+
+  // Utility functions for testing
+  async mintUSDC(amount: string = "10000"): Promise<string> {
+    try {
+      console.log('[ContractService] Minting USDC:', amount);
+      
+      if (!this.usdcContract || !this.signer) {
+        throw new Error('USDC contract or signer not initialized');
+      }
+
+      const userAddress = await this.signer.getAddress();
+      const amountWei = ethers.parseUnits(amount, 6);
+      
+      console.log('[ContractService] Minting', amount, 'USDC to', userAddress);
+      const tx = await this.usdcContract.mint(userAddress, amountWei);
+      const receipt = await tx.wait();
+      
+      console.log('[ContractService] USDC mint transaction:', receipt);
+      return receipt.hash;
+    } catch (error) {
+      console.error('[ContractService] Error minting USDC:', error);
+      throw error;
+    }
+  }
+
+  async mintMockNFT(): Promise<string> {
+    try {
+      console.log('[ContractService] Minting mock NFT...');
+      
+      if (!this.nftContract || !this.signer) {
+        throw new Error('NFT contract or signer not initialized');
+      }
+
+      const userAddress = await this.signer.getAddress();
+      
+      // Generate a random token ID between 1000-9999 to avoid conflicts
+      const randomTokenId = Math.floor(Math.random() * 9000) + 1000;
+      
+      console.log('[ContractService] Minting NFT with token ID:', randomTokenId, 'to', userAddress);
+      const tx = await this.nftContract.mint(userAddress, randomTokenId);
+      const receipt = await tx.wait();
+      
+      console.log('[ContractService] NFT mint transaction:', receipt);
+      return receipt.hash;
+    } catch (error) {
+      console.error('[ContractService] Error minting NFT:', error);
       throw error;
     }
   }
