@@ -90,8 +90,29 @@ export class ContractService {
     try {
       console.log('[ContractService] Initializing contracts...');
       
+      // Check network first
+      const network = await provider.getNetwork();
+      console.log('[ContractService] Connected to network:', network.chainId.toString());
+      
+      const expectedChainId = BigInt(97476);
+      if (network.chainId !== expectedChainId) {
+        const error = `Wrong network! Connected to ${network.chainId}, expected ${expectedChainId} (Doma testnet)`;
+        console.error('[ContractService]', error);
+        throw new Error(error);
+      }
+      
       this.provider = provider;
-      this.signer = await provider.getSigner();
+      
+      // Get signer with timeout
+      console.log('[ContractService] Getting signer...');
+      const signerPromise = provider.getSigner();
+      const timeoutPromise = new Promise((_, reject) => 
+        setTimeout(() => reject(new Error('Timeout waiting for signer - check if wallet is unlocked')), 10000)
+      );
+      
+      this.signer = await Promise.race([signerPromise, timeoutPromise]) as ethers.Signer;
+      const address = await this.signer.getAddress();
+      console.log('[ContractService] Signer obtained for address:', address);
       
       // Initialize contract instances
       this.vaultContract = new ethers.Contract(CONTRACTS.vault, VAULT_ABI, this.signer);
@@ -182,9 +203,18 @@ export class ContractService {
       const initialValueWei = ethers.parseUnits(initialValue, 6);
       console.log('[ContractService] Initial value in wei:', initialValueWei.toString());
 
-      // Check if NFT is approved
-      const isApproved = await this.nftContract.isApprovedForAll(userAddress, CONTRACTS.vault);
-      console.log('[ContractService] NFT approval status:', isApproved);
+      // Check if NFT is approved (with retry logic for RPC issues)
+      console.log('[ContractService] Checking NFT approval status...');
+      let isApproved = false;
+      try {
+        isApproved = await this.retryWithBackoff(() => 
+          this.nftContract!.isApprovedForAll(userAddress, CONTRACTS.vault)
+        );
+        console.log('[ContractService] NFT approval status:', isApproved);
+      } catch (error) {
+        console.error('[ContractService] Failed to check approval status after retries:', error);
+        throw new Error('Unable to check NFT approval status. The RPC endpoint may be overloaded. Please wait a moment and try again.');
+      }
       
       if (!isApproved) {
         console.log('[ContractService] Approving NFT...');
@@ -316,27 +346,79 @@ export class ContractService {
         throw new Error('NFT contract not initialized');
       }
 
+      // Get balance to know how many to look for
       const balance = await this.nftContract.balanceOf(userAddress);
-      console.log('[ContractService] NFT balance:', balance);
+      console.log('[ContractService] NFT balance:', balance.toString());
       
       const nfts: DomainNFT[] = [];
+      const balanceNum = Number(balance);
       
-      for (let i = 0; i < balance; i++) {
+      if (balanceNum === 0) {
+        console.log('[ContractService] No NFTs owned');
+        return [];
+      }
+      
+      // Since the contract doesn't have ERC721Enumerable, we use a limited search
+      // to avoid overwhelming the RPC endpoint
+      
+      // First, check token IDs that we know were minted (stored in localStorage)
+      const mintedTokenIds = this.getMintedTokenIds(userAddress);
+      console.log('[ContractService] Known minted token IDs:', mintedTokenIds);
+      
+      // Then check common IDs and sample the range
+      const tokenIdsToCheck = [
+        ...mintedTokenIds, // Priority: IDs we know were minted
+        ...Array.from({ length: 20 }, (_, i) => i + 1), // 1-20 (common IDs)
+        ...Array.from({ length: 30 }, (_, i) => 1000 + i * 300) // Sample 1000-9700 (every 300)
+      ].filter((id, index, self) => self.indexOf(id) === index); // Remove duplicates
+      
+      console.log('[ContractService] Checking ownership for up to', tokenIdsToCheck.length, 'token IDs...');
+      console.warn('[ContractService] Limited search due to lack of ERC721Enumerable. Some NFTs may not be found.');
+      
+      // Add delay between calls to avoid rate limiting
+      const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+      
+      for (let i = 0; i < tokenIdsToCheck.length; i++) {
+        if (nfts.length >= balanceNum) {
+          // Found all NFTs, stop searching
+          console.log('[ContractService] Found all', balanceNum, 'NFTs');
+          break;
+        }
+        
+        const tokenId = tokenIdsToCheck[i];
+        
         try {
-          const tokenId = await this.nftContract.tokenOfOwnerByIndex(userAddress, i);
-          const name = await this.nftContract.getDomainName(tokenId);
+          const owner = await this.nftContract.ownerOf(tokenId);
           
-          nfts.push({
-            tokenId: tokenId.toString(),
-            name,
-            owned: true
-          });
+          if (owner.toLowerCase() === userAddress.toLowerCase()) {
+            const name = await this.nftContract.getDomainName(tokenId);
+            const displayName = name || `domain-${tokenId}.io`;
+            
+            nfts.push({
+              tokenId: tokenId.toString(),
+              name: displayName,
+              owned: true
+            });
+            
+            console.log(`[ContractService] Found NFT: ID=${tokenId}, name=${displayName}`);
+          }
+          
+          // Small delay every 10 calls to avoid overwhelming RPC
+          if ((i + 1) % 10 === 0) {
+            await delay(100);
+          }
         } catch (error) {
-          console.error(`[ContractService] Error fetching NFT at index ${i}:`, error);
+          // Token doesn't exist or error, skip silently
         }
       }
       
-      console.log('[ContractService] Owned NFTs:', nfts);
+      console.log(`[ContractService] Found ${nfts.length} of ${balanceNum} owned NFTs`);
+      
+      // If we didn't find all NFTs, warn the user
+      if (nfts.length < balanceNum) {
+        console.warn(`[ContractService] Warning: Only found ${nfts.length} NFTs but balance shows ${balanceNum}. Some NFTs may have non-standard token IDs.`);
+      }
+      
       return nfts;
     } catch (error) {
       console.error('[ContractService] Error getting owned NFTs:', error);
@@ -405,10 +487,78 @@ export class ContractService {
       const receipt = await tx.wait();
       
       console.log('[ContractService] NFT mint transaction:', receipt);
+      
+      // Store the minted token ID in localStorage for future reference
+      this.storeMintedTokenId(userAddress, randomTokenId);
+      
       return receipt.hash;
     } catch (error) {
       console.error('[ContractService] Error minting NFT:', error);
       throw error;
+    }
+  }
+  
+  // Retry helper for handling RPC rate limiting
+  private async retryWithBackoff<T>(
+    fn: () => Promise<T>,
+    maxRetries: number = 3,
+    baseDelay: number = 1000
+  ): Promise<T> {
+    for (let i = 0; i < maxRetries; i++) {
+      try {
+        return await fn();
+      } catch (error: any) {
+        const isLastRetry = i === maxRetries - 1;
+        
+        if (isLastRetry) {
+          throw error;
+        }
+        
+        // Check if it's a rate limiting or RPC error
+        const errorMessage = error?.message || '';
+        const isRpcError = 
+          errorMessage.includes('Internal JSON-RPC error') ||
+          errorMessage.includes('missing revert data') ||
+          errorMessage.includes('rate limit') ||
+          error?.code === -32603;
+        
+        if (isRpcError) {
+          const delay = baseDelay * Math.pow(2, i); // Exponential backoff
+          console.log(`[ContractService] RPC error detected, retrying in ${delay}ms (attempt ${i + 1}/${maxRetries})...`);
+          await new Promise(resolve => setTimeout(resolve, delay));
+        } else {
+          // Not an RPC error, don't retry
+          throw error;
+        }
+      }
+    }
+    
+    throw new Error('Retry logic failed unexpectedly');
+  }
+  
+  // Helper methods for tracking minted NFT IDs
+  private getMintedTokenIds(userAddress: string): number[] {
+    try {
+      const key = `minted_nfts_${userAddress.toLowerCase()}`;
+      const stored = localStorage.getItem(key);
+      return stored ? JSON.parse(stored) : [];
+    } catch (error) {
+      console.error('[ContractService] Error reading minted NFTs from localStorage:', error);
+      return [];
+    }
+  }
+  
+  private storeMintedTokenId(userAddress: string, tokenId: number): void {
+    try {
+      const key = `minted_nfts_${userAddress.toLowerCase()}`;
+      const existing = this.getMintedTokenIds(userAddress);
+      if (!existing.includes(tokenId)) {
+        existing.push(tokenId);
+        localStorage.setItem(key, JSON.stringify(existing));
+        console.log('[ContractService] Stored minted token ID:', tokenId);
+      }
+    } catch (error) {
+      console.error('[ContractService] Error storing minted NFT to localStorage:', error);
     }
   }
 }

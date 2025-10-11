@@ -109,15 +109,25 @@ const CreateVaultModal: React.FC<CreateVaultModalProps> = ({ onClose }) => {
                 <div className="text-gray-400 text-sm">Showing mock NFTs for testing</div>
               </div>
             ) : (
-              <div className="grid grid-cols-3 gap-4">
-                {nfts.map((nft) => (
+              <>
+                {nfts.filter(n => n.owned).length === 0 && (
+                  <div className="mb-6 p-4 bg-yellow-900/20 border border-yellow-600 rounded-lg">
+                    <div className="text-yellow-400 font-jetbrains text-sm">
+                      ⚠️ You don't own any Domain NFTs yet. Click "Add Mock NFT" in the dashboard to mint one first.
+                    </div>
+                  </div>
+                )}
+                <div className="grid grid-cols-3 gap-4">
+                  {nfts.map((nft) => (
                   <div
                     key={nft.id}
-                    onClick={() => setSelectedNFT(nft.id)}
-                    className={`p-4 rounded-lg border-2 cursor-pointer transition-all duration-200 relative ${
-                      selectedNFT === nft.id
-                        ? 'border-green-500 bg-green-500/10'
-                        : 'border-gray-600 bg-gray-800 hover:border-gray-500'
+                    onClick={() => nft.owned && setSelectedNFT(nft.id)}
+                    className={`p-4 rounded-lg border-2 transition-all duration-200 relative ${
+                      !nft.owned
+                        ? 'border-gray-700 bg-gray-900/50 opacity-50 cursor-not-allowed'
+                        : selectedNFT === nft.id
+                        ? 'border-green-500 bg-green-500/10 cursor-pointer'
+                        : 'border-gray-600 bg-gray-800 hover:border-gray-500 cursor-pointer'
                     }`}
                   >
                     <div className="text-lg font-space-mono font-bold text-white mb-2">{nft.name}</div>
@@ -127,8 +137,8 @@ const CreateVaultModal: React.FC<CreateVaultModalProps> = ({ onClose }) => {
                       <div>Score: {nft.score}/100</div>
                     </div>
                     {!nft.owned && (
-                      <div className="absolute top-2 right-2 bg-yellow-500 text-black text-xs px-2 py-1 rounded">
-                        Mock
+                      <div className="absolute top-2 right-2 bg-red-500 text-white text-xs px-2 py-1 rounded font-bold">
+                        Not Owned
                       </div>
                     )}
                     {selectedNFT === nft.id && (
@@ -137,8 +147,9 @@ const CreateVaultModal: React.FC<CreateVaultModalProps> = ({ onClose }) => {
                       </button>
                     )}
                   </div>
-                ))}
-              </div>
+                  ))}
+                </div>
+              </>
             )}
           </div>
         );
