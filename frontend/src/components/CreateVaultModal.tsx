@@ -72,12 +72,42 @@ const CreateVaultModal: React.FC<CreateVaultModalProps> = ({ onClose }) => {
     loadOwnedNFTs();
   }, [isConnected, address]);
 
+  // Generate realistic AI scores based on domain characteristics
+  const calculateAIScore = (domainName: string): number => {
+    const parts = domainName.split('.');
+    const name = parts[0];
+    const tld = parts[1] || 'io';
+    
+    let score = 50; // Base score
+    
+    // Length scoring (shorter is better)
+    if (name.length <= 3) score += 25;
+    else if (name.length <= 5) score += 20;
+    else if (name.length <= 7) score += 15;
+    else score += 10;
+    
+    // TLD scoring
+    if (tld === 'eth' || tld === 'com') score += 15;
+    else if (tld === 'io' || tld === 'org') score += 10;
+    else score += 5;
+    
+    // Keyword bonus (crypto-related terms)
+    const keywords = ['crypto', 'defi', 'web3', 'nft', 'dao', 'meta'];
+    if (keywords.some(kw => name.toLowerCase().includes(kw))) score += 10;
+    
+    // Add some variance based on tokenId for uniqueness
+    const tokenId = parseInt(domainName.match(/\d+/)?.[0] || '0');
+    score += (tokenId % 10); // 0-9 points variance
+    
+    return Math.min(100, Math.max(60, score)); // Clamp between 60-100
+  };
+  
   const nfts = ownedNFTs.map(nft => ({
     id: nft.tokenId,
     name: nft.name,
     tld: nft.name.includes('.') ? nft.name.substring(nft.name.lastIndexOf('.')) : '.io',
     length: nft.name.split('.')[0].length,
-    score: Math.floor(Math.random() * 30) + 70, // Mock score between 70-100
+    score: calculateAIScore(nft.name),
     owned: nft.owned
   }));
 

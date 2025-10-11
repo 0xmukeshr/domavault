@@ -151,6 +151,35 @@ const Dashboard: React.FC<DashboardProps> = ({ onCreateVault, onMintOption }) =>
 
   const metrics = calculateMetrics();
 
+  // Generate realistic AI scores for mock domains (when contract returns 0)
+  const calculateAIScore = (domainName: string): number => {
+    const parts = domainName.split('.');
+    const name = parts[0];
+    const tld = parts[1] || 'io';
+    
+    let score = 50; // Base score
+    
+    // Length scoring (shorter is better)
+    if (name.length <= 3) score += 25;
+    else if (name.length <= 5) score += 20;
+    else if (name.length <= 7) score += 15;
+    else score += 10;
+    
+    // TLD scoring
+    if (tld === 'eth' || tld === 'com') score += 15;
+    else if (tld === 'io' || tld === 'org') score += 10;
+    else score += 5;
+    
+    // Keyword bonus (crypto-related terms)
+    const keywords = ['crypto', 'defi', 'web3', 'nft', 'dao', 'meta'];
+    if (keywords.some(kw => name.toLowerCase().includes(kw))) score += 10;
+    
+    // Add some variance based on domain hash for uniqueness
+    const hash = domainName.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
+    score += (hash % 10); // 0-9 points variance
+    
+    return Math.min(100, Math.max(60, score)); // Clamp between 60-100
+  };
 
   const handleClaimYield = async (domain: string) => {
     // Initialize claimable yield lazily if not set
@@ -385,7 +414,9 @@ const Dashboard: React.FC<DashboardProps> = ({ onCreateVault, onMintOption }) =>
             const collateralValue = parseFloat(vault.collateralValue);
             const borrowedAmount = parseFloat(vault.borrowedAmount);
             const ltvRatio = parseFloat(vault.currentLTV);
-            const aiScore = parseInt(vault.aiScore);
+            const contractAiScore = parseInt(vault.aiScore);
+            // Use contract AI score, or calculate one if it's 0 (for mock domains)
+            const aiScore = contractAiScore > 0 ? contractAiScore : calculateAIScore(vault.domainName);
             const availableToBorrow = collateralValue * 0.7 - borrowedAmount; // 70% LTV
             
             // Convert vault data to match VaultCard interface
